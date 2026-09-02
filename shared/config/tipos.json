@@ -1,0 +1,9 @@
+{
+  "fachada":      { "rotulo": "Fachada", "formatos": ["image/jpeg", "image/png", "video/mp4"], "obrigatorio": true,  "palavras": ["fachada", "frente", "entrada"] },
+  "refrigerador": { "rotulo": "Refrigerador", "formatos": ["image/jpeg", "image/png"], "obrigatorio": true, "palavras": ["refrigerador", "geladeira", "freezer", "frezzer", "expositor", "cervejeira"] },
+  "camara_fria":  { "rotulo": "Câmara fria", "formatos": ["image/jpeg", "image/png", "video/mp4"], "obrigatorio": false, "palavras": ["camara fria", "câmara fria", "camera fria", "câmera fria", "camara", "câmara"] },
+  "equipamentos": { "rotulo": "Balcão e equipamentos", "formatos": ["image/jpeg", "image/png"], "obrigatorio": true, "palavras": ["computador", "notebook", "impressora", "maquininha", "maquina", "balcao", "balcão", "caixa"] },
+  "nf_ambev":     { "rotulo": "NF Ambev", "formatos": ["image/jpeg", "image/png", "application/pdf"], "obrigatorio": true, "palavras": ["nf", "nota", "danfe", "ambev"] },
+  "cartao_cnpj":  { "rotulo": "Cartão CNPJ", "formatos": ["application/pdf", "image/jpeg", "image/png"], "obrigatorio": true, "palavras": ["cartao", "cartão", "cnpj", "receita"] },
+  "video_geral":  { "rotulo": "Vídeo geral", "formatos": ["video/mp4"], "obrigatorio": true, "palavras": ["video", "vídeo", "geral", "tour"] }
+}
