@@ -1,0 +1,20 @@
+# dependências e build
+node_modules/
+dist/
+coverage/
+.vite/
+
+# segredos e configuração local
+.env
+.env.*
+!.env.example
+
+# materiais reais enviados por PDVs (dados pessoais): nunca versionar
+exemplos/
+*.zip
+*.mp4
+*.mov
+
+# sistema
+.DS_Store
+*.log
