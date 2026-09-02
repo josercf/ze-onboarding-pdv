@@ -27,3 +27,11 @@ describe('validarArquivo', () => {
   });
   test('formatarMb usa vírgula', () => expect(formatarMb(11534336)).toBe('11,0 MB'));
 });
+
+import { validarArquivoBasico } from './validarArquivo';
+
+test('validarArquivoBasico aceita qualquer formato permitido e aplica o limite pelo mime', () => {
+  expect(validarArquivoBasico(arq('x.png', 'image/png', MB))).toEqual({ ok: true, mime: 'image/png' });
+  expect(validarArquivoBasico(arq('x.gif', 'image/gif', MB)).ok).toBe(false);
+  expect(validarArquivoBasico(arq('v.mp4', 'video/mp4', 12 * MB)).ok).toBe(false);
+});

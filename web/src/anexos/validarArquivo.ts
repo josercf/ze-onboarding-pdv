@@ -17,6 +17,20 @@ export function formatarMb(bytes: number): string {
   return `${(bytes / 1048576).toFixed(1).replace('.', ',')} MB`;
 }
 
+const FORMATOS_GLOBAIS = ['video/mp4', 'image/jpeg', 'image/png', 'application/pdf'];
+
+export function validarArquivoBasico(arquivo: ArquivoBasico): ResultadoValidacao {
+  const mime = inferirMime(arquivo);
+  if (!FORMATOS_GLOBAIS.includes(mime)) return { ok: false, motivo: `Formato não aceito. Envie MP4, JPEG, PNG ou PDF.` };
+  const video = mime.startsWith('video/');
+  const limite = video ? limites.maxBytesVideo : limites.maxBytesImagemPdf;
+  if (arquivo.size > limite) {
+    const dica = video ? 'Reenvie o vídeo pelo WhatsApp para compactar.' : 'Reduza a resolução da imagem.';
+    return { ok: false, motivo: `Arquivo com ${formatarMb(arquivo.size)}; o limite é ${formatarMb(limite)}. ${dica}` };
+  }
+  return { ok: true, mime };
+}
+
 export function validarArquivo(arquivo: ArquivoBasico, tipo: TipoAnexo): ResultadoValidacao {
   const mime = inferirMime(arquivo);
   const cfg = TIPOS_CONFIG[tipo];
