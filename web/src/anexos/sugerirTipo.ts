@@ -4,7 +4,7 @@ import type { TipoAnexo } from '../tipos';
 const ORDEM: TipoAnexo[] = ['camara_fria', 'nf_ambev', 'cartao_cnpj', 'equipamentos', 'refrigerador', 'fachada', 'video_geral'];
 
 export function normalizarTexto(s: string): string {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
 const escapar = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
