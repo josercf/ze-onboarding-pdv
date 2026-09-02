@@ -40,6 +40,7 @@ export function EtapaAnalise({ estado, despachar, cliente, hoje = () => new Date
 
   const terminados = estado.anexos.filter((a) => a.estado === 'concluido' || a.estado === 'falhou').length;
   const falhos = estado.anexos.filter((a) => a.estado === 'falhou').length;
+  const emAndamento = estado.anexos.some((a) => a.estado === 'na_fila' || a.estado === 'analisando');
 
   return (
     <section aria-labelledby="t-analise">
@@ -54,7 +55,7 @@ export function EtapaAnalise({ estado, despachar, cliente, hoje = () => new Date
             {a.estado === 'falhou'
               ? <span className="erro">Falhou: {a.erro}</span>
               : <span>{ROTULO_ESTADO_ITEM[a.estado]}</span>}
-            {a.estado === 'falhou' && <button type="button" onClick={() => analisar([a])}>Repetir</button>}
+            {a.estado === 'falhou' && <button type="button" disabled={emAndamento} onClick={() => analisar([a])}>Repetir</button>}
           </li>
         ))}
       </ul>

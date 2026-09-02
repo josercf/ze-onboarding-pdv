@@ -58,4 +58,23 @@ describe('EtapaAnalise', () => {
     expect(screen.getByTestId('etapa')).toHaveTextContent('4');
     expect(screen.getByTestId('verificacoes')).toHaveTextContent('16');
   });
+
+  test('Repetir fica desabilitado enquanto qualquer item da fila ainda está em andamento', async () => {
+    let resolverA1: (o: Observacao) => void = () => {};
+    const pendenteA1 = new Promise<Observacao>((resolve) => { resolverA1 = resolve; });
+    const analisarArquivo = vi.fn(async (p: { arquivoId: string; tipo: string }) => {
+      if (p.arquivoId === 'a1') return pendenteA1;
+      throw new Error('Falha imediata');
+    });
+    const cliente = { analisarArquivo, consolidar: vi.fn() } as unknown as ClienteN8n;
+    render(<Harness cliente={cliente} />);
+
+    const linhaA2 = await screen.findByRole('listitem', { name: 'a2.jpeg' });
+    await within(linhaA2).findByText(/Falhou:/);
+    expect(within(linhaA2).getByRole('button', { name: 'Repetir' })).toBeDisabled();
+
+    resolverA1(obs('a1', 'fachada'));
+    await within(screen.getByRole('listitem', { name: 'a1.jpeg' })).findByText('Concluído');
+    expect(within(linhaA2).getByRole('button', { name: 'Repetir' })).toBeEnabled();
+  });
 });
