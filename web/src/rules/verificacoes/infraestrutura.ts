@@ -12,7 +12,7 @@ const LOCAL: Record<string, string> = {
 
 export function contarRefrigeradores(e: EntradaMotor): { total: number; detalhe: string; evidencia: string } {
   const fotos = observacoesDe<DadosRefrigerador>(e, 'refrigerador').filter((o) => o.aderente_ao_tipo);
-  const nasFotos = fotos.reduce((acc, o) => acc + o.dados.unidades.filter((u) => u.categoria !== 'freezer_gelo').length, 0);
+  const nasFotos = fotos.reduce((acc, o) => acc + (o.dados.unidades ?? []).filter((u) => u.categoria !== 'freezer_gelo').length, 0);
   const video = primeiroVideo(e);
   const doVideo = (video?.dados.refrigeradores ?? []).filter((r) => r.categoria !== 'freezer_gelo');
   const evidencia = doVideo.map((r) => `${formatarTimestamp(r.timestamp_s)} ${CATEGORIA[r.categoria]}${r.marca ? ` ${r.marca}` : ''}`).join(', ');
@@ -59,7 +59,7 @@ export function verificarFachada(e: EntradaMotor): Verificacao {
   const tipoLocal = fachada?.dados.tipo_local ?? (ambiente === 'loja' ? 'loja_aberta' : ambiente === 'deposito' ? 'galpao_deposito' : 'indefinido');
   const partes = [LOCAL[tipoLocal]];
   if (fachada?.dados.letreiro) partes.push(`letreiro "${fachada.dados.letreiro}"`);
-  if (fachada) partes.push(`porta ${fachada.dados.porta.replace('_', ' ')}`);
+  if (fachada?.dados.porta) partes.push(`porta ${fachada.dados.porta.replace('_', ' ')}`);
   if (ambiente) partes.push(`vídeo mostra ambiente de ${ambiente}`);
   return montar(9, tipoLocal === 'loja_aberta' ? 'conforme' : 'atencao', 'Loja aberta ao público', partes.join('; '), fachada?.nome ?? video?.nome ?? '');
 }

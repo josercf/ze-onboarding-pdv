@@ -47,6 +47,12 @@ describe('refrigeradores', () => {
   test('evidência cita timestamps do vídeo', () => {
     expect(verificarRefrigeradores(ok()).evidencia).toContain('t=00:04');
   });
+  test('foto de refrigerador com dados incompletos não derruba a verificação (regressão)', () => {
+    const e = ok();
+    for (const o of e.observacoes) if (o.tipo === 'refrigerador') o.dados = {};
+    expect(() => verificarRefrigeradores(e)).not.toThrow();
+    expect(contarRefrigeradores(e).detalhe).toMatch(/, 0 nas fotos$/);
+  });
 });
 
 describe('câmara fria', () => {
@@ -82,6 +88,11 @@ describe('fachada', () => {
   });
   test('sem fachada e sem vídeo é não verificável', () => {
     expect(verificarFachada(semTipos(ok(), 'fachada', 'video_geral')).status).toBe('nao_verificavel');
+  });
+  test('fachada com dados incompletos não derruba a verificação (regressão)', () => {
+    const e = ok();
+    e.observacoes.find((o) => o.tipo === 'fachada')!.dados = {};
+    expect(() => verificarFachada(e)).not.toThrow();
   });
 });
 

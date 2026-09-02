@@ -30,7 +30,7 @@ export function verificarEntregadores(e: EntradaMotor): Verificacao {
 export function verificarTrezentosMl(e: EntradaMotor): Verificacao {
   const declarado = simNao(e.formulario.trabalha300ml);
   const nf = observacoesDe<DadosNfAmbev>(e, 'nf_ambev').find((o) => o.dados.itens_300ml);
-  const foto = observacoesDe<DadosRefrigerador>(e, 'refrigerador').find((o) => o.dados.unidades.some((u) => u.conteudo.some((c) => /300\s?ml/i.test(c))));
+  const foto = observacoesDe<DadosRefrigerador>(e, 'refrigerador').find((o) => (o.dados.unidades ?? []).some((u) => u.conteudo.some((c) => /300\s?ml/i.test(c))));
   const fonte = nf ? `NF ${nf.nome} lista itens de 300 ml` : foto ? `Garrafas de 300 ml em ${foto.nome}` : null;
   if (!fonte) return montar(15, 'nao_verificavel', declarado, 'Nenhuma evidência de 300 ml na NF nem nos refrigeradores');
   return montar(15, e.formulario.trabalha300ml === 'sim' ? 'conforme' : 'atencao', declarado, fonte, (nf ?? foto)!.nome);

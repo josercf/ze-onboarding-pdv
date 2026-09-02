@@ -52,4 +52,11 @@ describe('300 ml (15)', () => {
     const e = ok(); e.formulario = { ...e.formulario, trabalha300ml: 'nao' };
     expect(verificarTrezentosMl(e).status).toBe('atencao');
   });
+  test('foto de refrigerador com dados incompletos não derruba a verificação (regressão)', () => {
+    const e = ok();
+    e.observacoes = e.observacoes.filter((o) => o.tipo !== 'nf_ambev');
+    for (const o of e.observacoes) if (o.tipo === 'refrigerador') o.dados = {};
+    expect(() => verificarTrezentosMl(e)).not.toThrow();
+    expect(verificarTrezentosMl(e).status).toBe('nao_verificavel');
+  });
 });
