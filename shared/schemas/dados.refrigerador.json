@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["unidades"],
+  "properties": {
+    "unidades": {
+      "type": "array",
+      "description": "Uma entrada por equipamento de refrigeração distinto visível na imagem",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["categoria", "marca", "ligado", "conteudo"],
+        "properties": {
+          "categoria": { "type": "string", "enum": ["expositor_vertical", "freezer_horizontal", "geladeira_domestica", "freezer_gelo", "outro"] },
+          "marca": { "type": ["string", "null"] },
+          "ligado": { "type": ["boolean", "null"] },
+          "conteudo": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tipo_local", "letreiro", "numero_imovel", "porta"],
+  "properties": {
+    "tipo_local": { "type": "string", "enum": ["loja_aberta", "loja_fechada", "galpao_deposito", "residencia", "indefinido"] },
+    "letreiro": { "type": ["string", "null"], "description": "Texto do letreiro, se legível" },
+    "numero_imovel": { "type": ["string", "null"] },
+    "porta": { "type": "string", "enum": ["aberta", "fechada", "nao_visivel"] }
+  }
+}

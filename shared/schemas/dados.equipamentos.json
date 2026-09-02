@@ -1,0 +1,19 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["computador", "impressora_termica", "maquininhas", "roteador"],
+  "properties": {
+    "computador": { "type": "boolean" },
+    "impressora_termica": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["presente", "marca"],
+      "properties": { "presente": { "type": "boolean" }, "marca": { "type": ["string", "null"] } }
+    },
+    "maquininhas": {
+      "type": "array",
+      "items": { "type": "object", "additionalProperties": false, "required": ["marca"], "properties": { "marca": { "type": ["string", "null"] } } }
+    },
+    "roteador": { "type": "boolean" }
+  }
+}

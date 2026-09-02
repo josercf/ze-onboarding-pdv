@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["e_camara_frigorifica", "tipo_equipamento", "indicios", "estoque_visivel"],
+  "properties": {
+    "e_camara_frigorifica": { "type": "boolean", "description": "Verdadeiro só para câmara com painéis isotérmicos, porta de câmara e evaporador ou ventiladores" },
+    "tipo_equipamento": { "type": "string", "enum": ["camara", "freezer_gelo", "container", "outro"] },
+    "indicios": { "type": "array", "items": { "type": "string" } },
+    "estoque_visivel": { "type": "string", "enum": ["alto", "medio", "baixo", "vazio"] }
+  }
+}

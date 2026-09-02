@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["cnpj", "razao_social", "situacao", "cnae_principal", "endereco", "data_emissao"],
+  "properties": {
+    "cnpj": { "type": ["string", "null"], "description": "Somente dígitos" },
+    "razao_social": { "type": ["string", "null"] },
+    "situacao": { "type": ["string", "null"] },
+    "cnae_principal": { "type": ["string", "null"] },
+    "endereco": { "type": ["string", "null"] },
+    "data_emissao": { "type": ["string", "null"], "description": "AAAA-MM-DD" }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["parecer", "pontos_de_atencao", "recomendacao_sugerida", "justificativa"],
+  "properties": {
+    "parecer": { "type": "string", "description": "Até 150 palavras em pt-BR" },
+    "pontos_de_atencao": { "type": "array", "items": { "type": "string" } },
+    "recomendacao_sugerida": { "type": "string", "enum": ["apto", "revisao_manual", "nao_apto"] },
+    "justificativa": { "type": "string" }
+  }
+}

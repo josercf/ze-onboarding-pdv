@@ -1,0 +1,31 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["duracao_s", "refrigeradores", "camara_fria", "ambiente", "entregadores", "equipamentos", "transcricao"],
+  "properties": {
+    "duracao_s": { "type": ["number", "null"] },
+    "refrigeradores": {
+      "type": "array",
+      "description": "Um item por refrigerador distinto; não repetir quando a câmera voltar ao mesmo equipamento",
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["categoria", "marca", "timestamp_s"],
+        "properties": {
+          "categoria": { "type": "string", "enum": ["expositor_vertical", "freezer_horizontal", "geladeira_domestica", "freezer_gelo", "outro"] },
+          "marca": { "type": ["string", "null"] },
+          "timestamp_s": { "type": "number" }
+        }
+      }
+    },
+    "camara_fria": {
+      "type": "object", "additionalProperties": false, "required": ["presente", "timestamp_s"],
+      "properties": { "presente": { "type": "boolean" }, "timestamp_s": { "type": ["number", "null"] } }
+    },
+    "ambiente": { "type": "string", "enum": ["loja", "deposito", "misto"] },
+    "entregadores": {
+      "type": "object", "additionalProperties": false, "required": ["motos", "bags", "pessoas_entregando"],
+      "properties": { "motos": { "type": "integer" }, "bags": { "type": "integer" }, "pessoas_entregando": { "type": "integer" } }
+    },
+    "equipamentos": { "type": "object", "additionalProperties": false, "required": [], "properties": {} },
+    "transcricao": { "type": ["string", "null"], "description": "Transcrição do áudio, se houver fala" }
+  }
+}

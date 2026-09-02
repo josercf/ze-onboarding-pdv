@@ -1,0 +1,45 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["aderente_ao_tipo", "confianca", "resumo", "qualidade", "dados", "evidencias", "alertas"],
+  "properties": {
+    "aderente_ao_tipo": { "type": "boolean", "description": "O arquivo corresponde ao tipo declarado pelo PDV" },
+    "confianca": { "type": "number", "description": "Confiança geral entre 0 e 1" },
+    "resumo": { "type": "string", "description": "Uma frase em pt-BR descrevendo o que aparece" },
+    "qualidade": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nitidez", "iluminacao", "observacao"],
+      "properties": {
+        "nitidez": { "type": "string", "enum": ["boa", "media", "ruim"] },
+        "iluminacao": { "type": "string", "enum": ["boa", "media", "ruim"] },
+        "observacao": { "type": "string" }
+      }
+    },
+    "dados": { "type": "object", "additionalProperties": false, "required": [], "properties": {} },
+    "evidencias": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ref", "descricao"],
+        "properties": {
+          "ref": { "type": "string", "description": "Timestamp no formato t=mm:ss para vídeo, ou região da imagem" },
+          "descricao": { "type": "string" }
+        }
+      }
+    },
+    "alertas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["codigo", "descricao"],
+        "properties": {
+          "codigo": { "type": "string", "enum": ["foto_de_tela", "imagem_internet", "ambiente_divergente", "texto_ilegivel", "outro"] },
+          "descricao": { "type": "string" }
+        }
+      }
+    }
+  }
+}

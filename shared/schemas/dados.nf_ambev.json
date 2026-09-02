@@ -1,0 +1,25 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["emitente", "destinatario", "numero", "data_emissao", "valor_total", "itens_300ml", "legivel"],
+  "properties": {
+    "emitente": {
+      "type": "object", "additionalProperties": false, "required": ["nome", "cnpj"],
+      "properties": { "nome": { "type": ["string", "null"] }, "cnpj": { "type": ["string", "null"], "description": "Somente dígitos" } }
+    },
+    "destinatario": {
+      "type": "object", "additionalProperties": false, "required": ["nome", "cnpj", "codigo_cliente", "endereco"],
+      "properties": {
+        "nome": { "type": ["string", "null"] },
+        "cnpj": { "type": ["string", "null"], "description": "Somente dígitos" },
+        "codigo_cliente": { "type": ["string", "null"], "description": "Código do cliente impresso na NF, com zeros à esquerda" },
+        "endereco": { "type": ["string", "null"] }
+      }
+    },
+    "numero": { "type": ["string", "null"] },
+    "data_emissao": { "type": ["string", "null"], "description": "AAAA-MM-DD" },
+    "valor_total": { "type": ["number", "null"] },
+    "itens_300ml": { "type": "boolean" },
+    "legivel": { "type": "boolean" }
+  }
+}
