@@ -15,7 +15,7 @@ export type Acao =
   | { tipo: 'parametros'; valor: Partial<ParametrosRegiao> }
   | { tipo: 'anexo_adicionar'; valor: Anexo }
   | { tipo: 'anexo_remover'; arquivoId: string }
-  | { tipo: 'anexo_tipo'; arquivoId: string; valor: TipoAnexo }
+  | { tipo: 'anexo_tipo'; arquivoId: string; valor: TipoAnexo | null }
   | { tipo: 'anexo_estado'; valor: { arquivoId: string; estado: EstadoItem; observacao?: Observacao; erro?: string } }
   | { tipo: 'resultado'; verificacoes: Verificacao[]; recomendacao: Recomendacao }
   | { tipo: 'parecer'; valor: Parecer | null; erro?: string | null }

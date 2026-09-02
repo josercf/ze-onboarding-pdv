@@ -54,6 +54,9 @@ describe('EtapaAnexos', () => {
     await userEvent.selectOptions(combo, 'refrigerador');
     expect(within(linha('clipe.mp4')).getByText(/Formato não aceito/)).toBeInTheDocument();
     expect(combo).toHaveValue('');
+    expect(screen.getByRole('button', { name: 'Continuar' })).toBeDisabled();
+    await userEvent.selectOptions(combo, 'video_geral');
+    expect(screen.getByRole('button', { name: 'Continuar' })).toBeEnabled();
   });
 
   test('checklist reflete os tipos obrigatórios e remover funciona', async () => {

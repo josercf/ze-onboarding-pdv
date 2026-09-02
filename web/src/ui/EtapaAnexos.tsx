@@ -34,7 +34,11 @@ export function EtapaAnexos({ estado, despachar, obterDuracao = obterDuracaoVide
     if (!valor) return;
     const tipo = valor as TipoAnexo;
     const r = validarArquivo(anexo.arquivo, tipo);
-    if (!r.ok) { setErrosLinha((e) => ({ ...e, [anexo.arquivoId]: r.motivo })); return; }
+    if (!r.ok) {
+      setErrosLinha((e) => ({ ...e, [anexo.arquivoId]: r.motivo }));
+      despachar({ tipo: 'anexo_tipo', arquivoId: anexo.arquivoId, valor: null });
+      return;
+    }
     setErrosLinha((e) => { const { [anexo.arquivoId]: _r, ...resto } = e; return resto; });
     despachar({ tipo: 'anexo_tipo', arquivoId: anexo.arquivoId, valor: tipo });
   }
@@ -62,7 +66,7 @@ export function EtapaAnexos({ estado, despachar, obterDuracao = obterDuracaoVide
             <div className="detalhes">
               <strong>{a.nome}</strong>
               <small>{formatarMb(a.arquivo.size)}{a.duracaoS != null && <> · <span>{a.duracaoS} s</span></>}</small>
-              <select aria-label={`Tipo de ${a.nome}`} value={errosLinha[a.arquivoId] ? '' : (a.tipo ?? '')} onChange={(e) => mudarTipo(a, e.target.value)}>
+              <select aria-label={`Tipo de ${a.nome}`} value={a.tipo ?? ''} onChange={(e) => mudarTipo(a, e.target.value)}>
                 <option value="">Escolha o tipo</option>
                 {TIPOS.map((t) => <option key={t} value={t}>{TIPOS_CONFIG[t].rotulo}</option>)}
               </select>

@@ -56,6 +56,13 @@ describe('anexos', () => {
     e = reduzir(e, { tipo: 'anexo_remover', arquivoId: 'a1' });
     expect(e.anexos).toEqual([]);
   });
+  test('anexo_tipo com null deixa o anexo sem tipo e na fila', () => {
+    let e = reduzir(estadoInicial(), { tipo: 'anexo_adicionar', valor: anexo('a1', 'refrigerador') });
+    e = reduzir(e, { tipo: 'anexo_estado', valor: { arquivoId: 'a1', estado: 'concluido', observacao: { arquivo_id: 'a1' } as never } });
+    e = reduzir(e, { tipo: 'anexo_tipo', arquivoId: 'a1', valor: null });
+    expect(e.anexos[0]).toMatchObject({ tipo: null, estado: 'na_fila', observacao: undefined });
+    expect(podeAvancar({ ...e, etapa: 2 })).toBe(false);
+  });
   test('etapa 2 exige ao menos um anexo e todos com tipo; etapa 3 exige fila terminada', () => {
     let e = { ...estadoInicial(), etapa: 2 as const } as EstadoApp;
     expect(podeAvancar(e)).toBe(false);
