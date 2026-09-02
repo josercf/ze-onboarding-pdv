@@ -1,5 +1,5 @@
 import type { Recomendacao, Verificacao } from '../tipos';
-import type { EntradaMotor } from './base';
+import { montar, type EntradaMotor } from './base';
 import { calcularRecomendacao } from './recomendacao';
 import { verificarAnexos } from './verificacoes/anexos';
 import { verificarCupomFiscal, verificarEntregadores, verificarTrezentosMl } from './verificacoes/declarativas';
@@ -16,6 +16,13 @@ const VERIFICACOES = [
 ];
 
 export function avaliar(e: EntradaMotor): ResultadoMotor {
-  const verificacoes = VERIFICACOES.map((fn) => fn(e));
+  const verificacoes = VERIFICACOES.map((fn, i) => {
+    try {
+      return fn(e);
+    } catch (erro) {
+      const mensagem = erro instanceof Error ? erro.message : String(erro);
+      return montar(i + 1, 'nao_verificavel', '', `Erro interno na verificação: ${mensagem}`);
+    }
+  });
   return { verificacoes, recomendacao: calcularRecomendacao(verificacoes) };
 }

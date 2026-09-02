@@ -16,4 +16,17 @@ describe('avaliar', () => {
     expect(r.verificacoes.every((v) => v.status !== 'divergente')).toBe(true);
     expect(r.recomendacao).toBe('revisao_manual');
   });
+  test('exceção em uma verificação vira não verificável só naquele item, sem derrubar as outras 15', () => {
+    const e = ok();
+    const video = e.observacoes.find((o) => o.tipo === 'video_geral')!;
+    Reflect.deleteProperty(video.dados, 'entregadores');
+    const r = avaliar(e);
+    expect(r.verificacoes).toHaveLength(16);
+    expect(r.verificacoes.map((v) => v.id)).toEqual(Array.from({ length: 16 }, (_, i) => i + 1));
+    const item14 = r.verificacoes.find((v) => v.id === 14)!;
+    expect(item14.status).toBe('nao_verificavel');
+    expect(item14.observado).toMatch(/^Erro interno/);
+    expect(r.verificacoes.filter((v) => v.id !== 14).every((v) => v.status === 'conforme')).toBe(true);
+    expect(r.recomendacao).toBe('apto');
+  });
 });
