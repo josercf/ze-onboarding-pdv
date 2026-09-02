@@ -16,7 +16,7 @@ function contemPalavra(texto: string, palavra: string): boolean {
 export function sugerirTipo(nome: string, mime: string): TipoAnexo | null {
   const texto = normalizarTexto(nome.replace(/\.[^.]+$/, ''));
   for (const tipo of ORDEM) {
-    if (TIPOS_CONFIG[tipo].palavras.some((p) => contemPalavra(texto, normalizarTexto(p)))) return tipo;
+    if (TIPOS_CONFIG[tipo].formatos.includes(mime) && TIPOS_CONFIG[tipo].palavras.some((p) => contemPalavra(texto, normalizarTexto(p)))) return tipo;
   }
   return mime.startsWith('video/') ? 'video_geral' : null;
 }

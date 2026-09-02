@@ -21,4 +21,6 @@ describe('sugerirTipo', () => {
     expect(sugerirTipo('WhatsApp Image 2026-08-31 at 11.17.19.jpeg', 'image/jpeg')).toBeNull();
   });
   test('"info" não casa com "nf"', () => expect(sugerirTipo('info loja.jpeg', 'image/jpeg')).toBeNull());
+  test('rejeita tipo compatível por mime incompatível', () => expect(sugerirTipo('visão geral da loja.jpeg', 'image/jpeg')).toBeNull());
+  test('fallback video_geral mesmo com palavra de tipo incompatível', () => expect(sugerirTipo('geladeira tour.mp4', 'video/mp4')).toBe('video_geral'));
 });
