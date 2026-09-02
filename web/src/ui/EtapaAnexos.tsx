@@ -1,5 +1,5 @@
 // web/src/ui/EtapaAnexos.tsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TIPOS_CONFIG } from '@shared/config/index';
 import { TIPOS } from '@shared/schemas/index';
 import { obterDuracaoVideo } from '../anexos/duracaoVideo';
@@ -10,6 +10,12 @@ import type { TipoAnexo } from '../tipos';
 import { Botoes } from './componentes';
 
 interface Props { estado: EstadoApp; despachar: (a: Acao) => void; obterDuracao?: (arquivo: File) => Promise<number | null> }
+
+function Miniatura({ arquivo }: { arquivo: File }) {
+  const [url] = useState(() => URL.createObjectURL(arquivo));
+  useEffect(() => () => URL.revokeObjectURL(url), [url]);
+  return <img src={url} alt="" width={64} height={64} />;
+}
 
 export function EtapaAnexos({ estado, despachar, obterDuracao = obterDuracaoVideo }: Props) {
   const [recusados, setRecusados] = useState<string[]>([]);
@@ -62,7 +68,7 @@ export function EtapaAnexos({ estado, despachar, obterDuracao = obterDuracaoVide
       <ul className="anexos" aria-label="Arquivos adicionados">
         {estado.anexos.map((a) => (
           <li key={a.arquivoId} aria-label={a.nome}>
-            {a.mime.startsWith('image/') ? <img src={URL.createObjectURL(a.arquivo)} alt="" width={64} height={64} /> : <span className="icone">{a.mime.startsWith('video/') ? 'Vídeo' : 'PDF'}</span>}
+            {a.mime.startsWith('image/') ? <Miniatura arquivo={a.arquivo} /> : <span className="icone">{a.mime.startsWith('video/') ? 'Vídeo' : 'PDF'}</span>}
             <div className="detalhes">
               <strong>{a.nome}</strong>
               <small>{formatarMb(a.arquivo.size)}{a.duracaoS != null && <> · <span>{a.duracaoS} s</span></>}</small>

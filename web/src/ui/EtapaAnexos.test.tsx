@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
-import { describe, expect, test } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import { estadoInicial, reduzir } from '../fluxo/estadoApp';
 import { EtapaAnexos } from './EtapaAnexos';
 
@@ -57,6 +57,21 @@ describe('EtapaAnexos', () => {
     expect(screen.getByRole('button', { name: 'Continuar' })).toBeDisabled();
     await userEvent.selectOptions(combo, 'video_geral');
     expect(screen.getByRole('button', { name: 'Continuar' })).toBeEnabled();
+  });
+
+  test('miniatura cria a object URL uma vez por arquivo e revoga ao desmontar', async () => {
+    const criar = vi.spyOn(URL, 'createObjectURL').mockClear();
+    const revogar = vi.spyOn(URL, 'revokeObjectURL').mockClear();
+    const { unmount } = render(<Harness />);
+    await userEvent.upload(entrada(), arquivo('gelo.jpeg', 'image/jpeg'));
+    expect(criar).toHaveBeenCalledTimes(1);
+
+    const combo = within(linha('gelo.jpeg')).getByRole('combobox');
+    await userEvent.selectOptions(combo, 'refrigerador');
+    expect(criar).toHaveBeenCalledTimes(1);
+
+    unmount();
+    expect(revogar).toHaveBeenCalledTimes(1);
   });
 
   test('checklist reflete os tipos obrigatórios e remover funciona', async () => {
