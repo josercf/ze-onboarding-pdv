@@ -82,6 +82,7 @@ export function criarClienteN8n(cfg: ConfigCliente): ClienteN8n {
     } catch (e) {
       if (e instanceof ErroApi && RETENTAVEIS.includes(e.codigo) && !sinal?.aborted) {
         await dormir(espera);
+        if (sinal?.aborted) throw e;
         return fn();
       }
       throw e;

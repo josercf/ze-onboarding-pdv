@@ -56,6 +56,15 @@ describe('analisarArquivo', () => {
     const fetchFn = vi.fn((_url: string, init: RequestInit) => new Promise((_, rej) => init.signal!.addEventListener('abort', () => rej(Object.assign(new Error('abortado'), { name: 'AbortError' })))));
     await expect(cliente(fetchFn, { timeoutMs: 5 }).analisarArquivo(params())).rejects.toMatchObject({ codigo: 'tempo' });
   });
+  test('cancelamento durante a espera do retry não dispara a segunda chamada', async () => {
+    const controlador = new AbortController();
+    const fetchFn = vi.fn(async () => json(502, { erro: { codigo: 'modelo', mensagem: 'Erro temporário' } }));
+    const dormir_mock = vi.fn(async () => {
+      controlador.abort();
+    });
+    await expect(cliente(fetchFn, { dormir: dormir_mock }).analisarArquivo(params(), controlador.signal)).rejects.toMatchObject({ codigo: 'servidor' });
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('consolidar', () => {
