@@ -31,4 +31,34 @@ describe('completude e qualidade (16)', () => {
     const e = ok(); e.observacoes[0].alertas = [{ codigo: 'foto_de_tela', descricao: 'moldura de celular visível' }];
     expect(verificarAnexos(e).observado).toMatch(/moldura de celular/);
   });
+  test('nitidez ruim vira atenção', () => {
+    const e = ok(); e.observacoes[0].qualidade.nitidez = 'ruim';
+    const v = verificarAnexos(e);
+    expect(v.status).toBe('atencao');
+    expect(v.observado).toMatch(/com nitidez ruim/);
+  });
+  test('iluminação ruim vira atenção', () => {
+    const e = ok(); e.observacoes[0].qualidade.iluminacao = 'ruim';
+    const v = verificarAnexos(e);
+    expect(v.status).toBe('atencao');
+    expect(v.observado).toMatch(/com iluminação ruim/);
+  });
+  test('alerta de imagem de internet vira atenção', () => {
+    const e = ok(); e.observacoes[0].alertas = [{ codigo: 'imagem_internet', descricao: 'marca d água de banco de imagens' }];
+    const v = verificarAnexos(e);
+    expect(v.status).toBe('atencao');
+    expect(v.observado).toMatch(/marca d água de banco de imagens/);
+  });
+  test('vídeo curto detectado pela duração do anexo quando duracao_s é nulo', () => {
+    const e = ok();
+    (e.observacoes.find((o) => o.tipo === 'video_geral')!.dados as unknown as { duracao_s: number | null }).duracao_s = null;
+    e.anexosEnviados = e.anexosEnviados.map((a) => (a.arquivoId === 'a9' ? { ...a, duracaoS: 5 } : a));
+    const v = verificarAnexos(e);
+    expect(v.status).toBe('atencao');
+    expect(v.observado).toMatch(/5 s/);
+    const semProblema = ok();
+    (semProblema.observacoes.find((o) => o.tipo === 'video_geral')!.dados as unknown as { duracao_s: number | null }).duracao_s = null;
+    semProblema.anexosEnviados = semProblema.anexosEnviados.map((a) => (a.arquivoId === 'a9' ? { ...a, duracaoS: null } : a));
+    expect(verificarAnexos(semProblema).status).toBe('conforme');
+  });
 });
