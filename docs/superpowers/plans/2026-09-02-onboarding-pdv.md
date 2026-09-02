@@ -64,7 +64,9 @@ Pré-requisitos manuais (pedir ao José): extrair `OneDrive_1_02-09-2026 (1).zip
 - [ ] **Passo 1: criar a branch e o esqueleto mínimo do workspace**
 
 ```bash
-git checkout -b feat/versao-inicial
+# Já estamos na branch feat/versao-inicial (worktree); não criar branch.
+# Se a Tarefa 1 já rodou, package.json e .env.example existem e o script spike:video já está lá: não sobrescrever.
+if [ ! -f package.json ]; then
 cat > .env.example <<'EOT'
 OPENROUTER_API_KEY=
 N8N_BASE_URL=
@@ -82,6 +84,7 @@ cat > package.json <<'EOT'
 }
 EOT
 pnpm add -D typescript tsx @types/node
+fi
 ```
 
 - [ ] **Passo 2: escrever o script do spike**
@@ -204,6 +207,11 @@ Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>"
 cat > pnpm-workspace.yaml <<'EOT'
 packages:
   - web
+EOT
+cat > .env.example <<'EOT'
+OPENROUTER_API_KEY=
+N8N_BASE_URL=
+N8N_TOKEN=
 EOT
 cat > package.json <<'EOT'
 {
@@ -3379,8 +3387,8 @@ describe('EtapaAnexos', () => {
     render(<Harness />);
     await userEvent.upload(entrada(), arquivo('fachada.jpeg', 'image/jpeg'));
     const checklist = screen.getByRole('list', { name: 'Checklist de anexos' });
-    expect(within(checklist).getByText('Fachada')).toHaveTextContent('Fachada: ok');
-    expect(within(checklist).getByText(/NF Ambev/)).toHaveTextContent('faltando');
+    expect(within(checklist).getByText('Fachada: ok')).toBeInTheDocument();
+    expect(within(checklist).getByText('NF Ambev: faltando')).toBeInTheDocument();
     expect(within(checklist).queryByText(/Câmara fria/)).toBeNull();
     await userEvent.click(within(linha('fachada.jpeg')).getByRole('button', { name: 'Remover' }));
     expect(screen.queryByRole('listitem', { name: 'fachada.jpeg' })).toBeNull();
@@ -3929,7 +3937,7 @@ export function EtapaRelatorio({ estado, despachar, cliente, agora = () => new D
     <section className="relatorio" aria-labelledby="t-relatorio">
       <header className="cabecalho">
         <h2 id="t-relatorio">Relatório de conformidade</h2>
-        <p><strong>{estado.receita?.razaoSocial || 'PDV'}</strong><br />{formatarCnpj(estado.formulario.cnpj)}<br />{geradoEm.toLocaleString('pt-BR')}</p>
+        <p><strong>{estado.receita?.razaoSocial || 'PDV'}</strong><br /><span>{formatarCnpj(estado.formulario.cnpj)}</span><br /><span>{geradoEm.toLocaleString('pt-BR')}</span></p>
         <p className={`recomendacao ${recomendacao}`} data-testid="recomendacao">Recomendação: {ROTULO_RECOMENDACAO[recomendacao]}</p>
       </header>
 
