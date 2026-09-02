@@ -83,19 +83,19 @@ Status possíveis: **Conforme**, **Divergente**, **Atenção** (revisão manual)
 | 3 | Responsável pelo CNPJ | nome | razão social e QSA | Similaridade de nome normalizado ≥ 0,8 = Conforme |
 | 4 | Sócio | sim/não | QSA e natureza jurídica | Empresário individual com QSA vazio = sem sócio; divergência com o declarado = Divergente |
 | 5 | Cartão CNPJ | anexo | OCR do cartão contra BrasilAPI | Mesmo CNPJ e razão social; emissão há até 90 dias |
-| 6 | NF Ambev | código de parceiro | OCR da NF | Emitente Ambev ou CRBS; CNPJ do destinatário igual ao do formulário; código do cliente igual ao declarado; emissão há até 90 dias |
-| 7 | Refrigeradores | quantidade | máximo entre contagem do vídeo geral e fotos distintas | Observado ≥ mínimo da região e diferença para o declarado ≤ 1 = Conforme; observado < mínimo ou diferença > 1 = Divergente |
-| 8 | Câmara fria | sim/não | anexo `camara_fria` e vídeo | Anexo rotulado como câmara fria precisa ser câmara de fato; se obrigatória na região, precisa existir |
+| 6 | NF Ambev | parceiro Ambev (sim/não) e código | OCR da NF | Emitente Ambev ou CRBS; CNPJ do destinatário igual ao do formulário; código do cliente igual ao declarado; emissão há até 90 dias. Qualquer campo divergente = Divergente. Parceiro declarado como não = Não verificável, com nota |
+| 7 | Refrigeradores | quantidade | máximo entre a contagem de refrigeradores distintos no vídeo geral e a soma das `unidades` nas fotos de refrigerador | Observado ≥ mínimo da região e diferença para o declarado ≤ 1 = Conforme; observado < mínimo ou diferença > 1 = Divergente |
+| 8 | Câmara fria | sim/não | anexo `camara_fria` e vídeo | Declarado sim com evidência de câmara de fato = Conforme; declarado sim sem evidência ou com equipamento que não é câmara = Divergente; declarado não com câmara obrigatória na região = Divergente; declarado não com anexo rotulado como câmara fria que não é câmara = Atenção (rótulo incorreto); declarado não, sem obrigatoriedade e sem anexo = Conforme |
 | 9 | Fachada | anexo | fachada e vídeo | Loja identificável aberta ao público = Conforme; porta de aço fechada ou depósito = Atenção |
 | 10 | Maquininhas | quantidade | equipamentos e vídeo | Observado ≥ 1 e diferença ≤ 1 = Conforme |
 | 11 | Computador e internet | sim/não | equipamentos | Computador visível = Conforme; internet não é verificável e vira nota |
 | 12 | Impressora térmica | sim/não | equipamentos | Impressora visível = Conforme |
-| 13 | Cupom fiscal | sim/não + observação | classificação do texto livre pelo modelo de parecer | Resposta condicional = Atenção |
+| 13 | Cupom fiscal | sim/não + observação | heurística determinística sobre o texto livre | Declarado sim sem ressalva = Conforme; texto com marcadores condicionais (porém, mas, ainda, não, em processo, aguardando, pendente) = Atenção; declarado não = Atenção |
 | 14 | Entregadores | quantidade | vídeo (motos, bags) | Informativo; sem evidência = Não verificável |
 | 15 | 300 ml | sim/não | refrigeradores e NF | Aparece em qualquer fonte = Conforme; senão Não verificável |
 | 16 | Completude e qualidade dos anexos | lista de tipos | presença e `qualidade` | Faltando fachada, refrigerador, equipamentos, NF, cartão ou vídeo = Atenção; vídeo < 10 s ou escuro = Atenção |
 
-Recomendação sugerida: **Não apto** se houver Divergente em item crítico (1, 6, 7, 8); **Revisão manual** se houver Atenção ou Não verificável em item obrigatório; **Apto** caso contrário. A lista de itens críticos e obrigatórios fica em `shared/config`. Aplicado ao caso reprovado de referência, o catálogo marca Divergente em 6, 7 e 8 e Atenção em 9 e 13.
+Recomendação sugerida: **Não apto** se houver Divergente em item crítico (1, 6, 7, 8); **Revisão manual** se houver Atenção ou Não verificável em item obrigatório; **Apto** caso contrário. A lista de itens críticos e obrigatórios fica em `shared/config`. Aplicado ao caso reprovado de referência, o catálogo marca Divergente em 6 e 7 e Atenção em 8, 9 e 13, o que resulta em Não apto.
 
 ## 7. Contratos das APIs
 
@@ -182,6 +182,7 @@ Página única com quatro etapas, pt-BR, responsiva, identidade visual neutra co
 | `aderente_ao_tipo = false` | Alerta no arquivo e opção de retipar e reanalisar |
 | `consolidar` falha | Relatório exibido sem parecer, com botão para gerar novamente |
 | Rede caiu | Fila pausa e retoma ao reconectar |
+| Resposta do n8n passa de 95 s | O frontend aborta a chamada (AbortController) e trata como 504 |
 
 Repetir um arquivo substitui a observação anterior pelo mesmo `arquivo_id`.
 
@@ -217,6 +218,7 @@ Repositório público `josercf/ze-onboarding-pdv`, remote `git@github.com-joserc
 | `shared/` | `schemas/*.json`, `config/` (CNAEs, itens críticos e obrigatórios, padrões regionais, limites) |
 | `docs/` | `adrs/`, `superpowers/specs/`, `operacao.md` (importar workflows, credenciais, CORS, token), `testes-manuais.md` |
 | `.github/workflows/` | `ci.yml` (lint e testes em PR e push), `deploy.yml` (build e `deploy-pages` no push em `main`) |
+| `scripts/` | `build-n8n.ts` (gera os workflows a partir de `n8n/lib`, `n8n/prompts` e `shared/schemas`) e `smoke.ts` |
 | `exemplos/` | Ignorado pelo git |
 
 `VITE_N8N_BASE_URL` e `VITE_N8N_TOKEN` entram por variáveis do GitHub Actions no build. A importação dos workflows no n8n Cloud é manual e documentada em `docs/operacao.md`.
@@ -241,7 +243,7 @@ Um candidato típico (4 vídeos de até 30 s, 20 fotos, 1 PDF): cerca de 50 mil 
 
 ## 17. Critérios de aceite da versão inicial
 
-1. Os dois casos reais, processados localmente com a chave do OpenRouter, produzem recomendação Apto para o caso aprovado e Não apto para o caso reprovado, com Divergente nos itens 6, 7 e 8 do segundo.
+1. Os dois casos reais, processados localmente com a chave do OpenRouter, produzem recomendação Apto para o caso aprovado e Não apto para o caso reprovado, com Divergente nos itens 6 e 7 e Atenção nos itens 8, 9 e 13 do segundo.
 2. Todo arquivo de exemplo é analisado em menos de 100 s, sem erro 524.
 3. Testes automatizados passam em CI; o motor de regras tem as 16 verificações cobertas.
 4. O site publicado no Pages conclui o fluxo completo a partir de um celular.
