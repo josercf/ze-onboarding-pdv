@@ -1,0 +1,23 @@
+{
+  "name": "ze-onboarding-pdv",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "test": "vitest run && pnpm -C web test",
+    "test:node": "vitest run",
+    "lint": "pnpm -C web lint",
+    "build": "pnpm -C web build",
+    "build:n8n": "tsx scripts/build-n8n.ts",
+    "smoke": "tsx scripts/smoke.ts",
+    "spike:video": "tsx scripts/spike-video.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.0",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "tsx": "^4.23.13",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
+  }
+}
