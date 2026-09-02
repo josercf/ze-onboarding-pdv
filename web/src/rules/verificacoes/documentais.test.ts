@@ -64,6 +64,18 @@ describe('casos de borda', () => {
     (outro.observacoes.find((o) => o.tipo === 'cartao_cnpj')!.dados as unknown as DadosCartaoCnpj).cnpj = '12345678000195';
     expect(verificarCartaoCnpj(outro).status).toBe('divergente');
   });
+  test('cartão com data_emissao exatamente 90 dias antes fica conforme', () => {
+    const e = ok();
+    const cartao = e.observacoes.find((o) => o.tipo === 'cartao_cnpj')!;
+    (cartao.dados as unknown as DadosCartaoCnpj).data_emissao = '2026-06-04';
+    expect(verificarCartaoCnpj(e).status).toBe('conforme');
+  });
+  test('cartão com data_emissao 91 dias antes fica atencao', () => {
+    const e = ok();
+    const cartao = e.observacoes.find((o) => o.tipo === 'cartao_cnpj')!;
+    (cartao.dados as unknown as DadosCartaoCnpj).data_emissao = '2026-06-03';
+    expect(verificarCartaoCnpj(e).status).toBe('atencao');
+  });
   test('sem cartão é não verificável', () => {
     const e = ok();
     e.observacoes = e.observacoes.filter((o) => o.tipo !== 'cartao_cnpj');

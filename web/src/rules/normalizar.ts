@@ -2,7 +2,7 @@ const IGNORAR = new Set(['de', 'da', 'do', 'das', 'dos', 'e', 'ltda', 'me', 'epp
 
 export function tokensNome(nome: string): string[] {
   return nome
-    .normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
     .replace(/[^a-z\s]/g, ' ')
     .split(/\s+/)
     .filter((t) => t && !IGNORAR.has(t));

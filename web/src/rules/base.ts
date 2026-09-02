@@ -31,8 +31,10 @@ export function parseData(texto: string | null | undefined): Date | null {
   return null;
 }
 
+const inicioDoDiaUtc = (d: Date) => Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+
 export function diasEntre(depois: Date, antes: Date): number {
-  return Math.round((depois.getTime() - antes.getTime()) / 86_400_000);
+  return Math.floor((inicioDoDiaUtc(depois) - inicioDoDiaUtc(antes)) / 86_400_000);
 }
 
 export function formatarTimestamp(segundos: number): string {
