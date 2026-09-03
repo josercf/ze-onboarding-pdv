@@ -7,9 +7,13 @@ import dadosNfAmbev from './dados.nf_ambev.json';
 import dadosCartaoCnpj from './dados.cartao_cnpj.json';
 import dadosVideoGeral from './dados.video_geral.json';
 import parecerModelo from './parecer.modelo.json';
+import classificacaoModelo from './classificacao.json';
 
 export const TIPOS = ['fachada', 'refrigerador', 'camara_fria', 'equipamentos', 'nf_ambev', 'cartao_cnpj', 'video_geral'] as const;
 export type TipoAnexo = (typeof TIPOS)[number];
+
+export const TIPOS_DETECTADOS = [...TIPOS, 'indefinido'] as const;
+export type TipoDetectado = (typeof TIPOS_DETECTADOS)[number];
 
 export interface SchemaObjeto {
   type: 'object';
@@ -70,5 +74,20 @@ export function schemaParecerCompleto(): SchemaObjeto {
     ...schemaParecerModelo,
     properties: { ...schemaParecerModelo.properties, ...METADADOS_PARECER },
     required: [...schemaParecerModelo.required, ...Object.keys(METADADOS_PARECER)],
+  };
+}
+
+export const schemaClassificacaoModelo = classificacaoModelo as SchemaObjeto;
+
+const METADADOS_CLASSIFICACAO: Record<string, unknown> = {
+  arquivo_id: METADADOS.arquivo_id, nome: METADADOS.nome, mime: METADADOS.mime,
+  modelo: METADADOS.modelo, tokens: METADADOS.tokens, latencia_ms: METADADOS.latencia_ms,
+};
+
+export function schemaClassificacaoCompleta(): SchemaObjeto {
+  return {
+    ...schemaClassificacaoModelo,
+    properties: { ...schemaClassificacaoModelo.properties, ...METADADOS_CLASSIFICACAO },
+    required: [...schemaClassificacaoModelo.required, ...Object.keys(METADADOS_CLASSIFICACAO)],
   };
 }

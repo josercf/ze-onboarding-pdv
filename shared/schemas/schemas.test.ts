@@ -1,7 +1,7 @@
 import Ajv from 'ajv';
 import { describe, expect, test } from 'vitest';
 import {
-  TIPOS, schemaModeloObservacao, schemaObservacaoCompleta, schemaParecerModelo, schemaParecerCompleto,
+  TIPOS, TIPOS_DETECTADOS, schemaClassificacaoCompleta, schemaClassificacaoModelo, schemaModeloObservacao, schemaObservacaoCompleta, schemaParecerModelo, schemaParecerCompleto,
   type TipoAnexo,
 } from './index';
 
@@ -92,5 +92,26 @@ describe('schema do parecer', () => {
   });
   test('recomendação fora do enum invalida', () => {
     expect(ajv.validate(schemaParecerModelo, { ...parecer, recomendacao_sugerida: 'talvez' })).toBe(false);
+  });
+});
+
+describe('schema da classificação', () => {
+  const classificacao = { tipo_detectado: 'fachada', confianca: 0.92, motivo: 'Frente de loja com letreiro.' };
+  const metadadosClassificacao = { arquivo_id: 'a1', nome: 'foto.jpeg', mime: 'image/jpeg', modelo: 'google/gemini-2.5-flash', tokens: { entrada: 1200, saida: 40 }, latencia_ms: 1800 };
+
+  test('amostra válida passa no schema do modelo e no completo', () => {
+    expect(ajv.validate(schemaClassificacaoModelo, classificacao)).toBe(true);
+    expect(ajv.validate(schemaClassificacaoCompleta(), { ...classificacao, ...metadadosClassificacao })).toBe(true);
+  });
+  test('enum de tipo_detectado cobre os sete tipos e indefinido, e rejeita outros valores', () => {
+    expect((schemaClassificacaoModelo.properties.tipo_detectado as { enum: string[] }).enum).toEqual([...TIPOS_DETECTADOS]);
+    expect(ajv.validate(schemaClassificacaoModelo, { ...classificacao, tipo_detectado: 'geladeira' })).toBe(false);
+  });
+  test('schema completo exige metadados e todo objeto é estrito', () => {
+    expect(ajv.validate(schemaClassificacaoCompleta(), classificacao)).toBe(false);
+    for (const [caminho, obj] of objetosDe(schemaClassificacaoCompleta())) {
+      expect(obj.additionalProperties, caminho).toBe(false);
+      expect([...(obj.required as string[])].sort(), caminho).toEqual(Object.keys(obj.properties as object).sort());
+    }
   });
 });

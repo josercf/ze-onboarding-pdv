@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tipo_detectado", "confianca", "motivo"],
+  "properties": {
+    "tipo_detectado": {
+      "type": "string",
+      "enum": ["fachada", "refrigerador", "camara_fria", "equipamentos", "nf_ambev", "cartao_cnpj", "video_geral", "indefinido"],
+      "description": "Tipo de documento do onboarding que o arquivo representa, ou indefinido"
+    },
+    "confianca": { "type": "number", "description": "Confiança da classificação entre 0 e 1" },
+    "motivo": { "type": "string", "description": "Uma frase curta em pt-BR justificando a classificação" }
+  }
+}
