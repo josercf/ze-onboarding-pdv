@@ -43,7 +43,7 @@ describe('EtapaAnexos', () => {
     await userEvent.upload(entrada(), [arquivo('fachada.jpeg', 'image/jpeg'), arquivo('gelo.jpeg', 'image/jpeg'), arquivo('tour.mp4', 'video/mp4', 4 * MB)]);
     expect(await within(linha('fachada.jpeg')).findByText('Fachada, detectado')).toBeInTheDocument();
     expect(within(linha('fachada.jpeg')).getByRole('combobox')).toHaveValue('fachada');
-    expect(await within(linha('gelo.jpeg')).findByText('Escolha o tipo')).toBeInTheDocument();
+    expect(await within(linha('gelo.jpeg')).findByText('Escolha o tipo', { selector: '.selo' })).toBeInTheDocument();
     expect(within(linha('gelo.jpeg')).getByRole('combobox')).toHaveValue('');
     expect(within(linha('gelo.jpeg')).getByText('parece refrigerador')).toBeInTheDocument();
     expect(within(linha('tour.mp4')).getByRole('combobox')).toHaveValue('video_geral');
@@ -73,7 +73,7 @@ describe('EtapaAnexos', () => {
     expect(combo).toHaveValue('');
     await userEvent.selectOptions(combo, 'refrigerador');
     expect(combo).toHaveValue('refrigerador');
-    expect(within(linha('foto.jpeg')).getByText('Refrigerador')).toBeInTheDocument();
+    expect(within(linha('foto.jpeg')).getByText('Refrigerador', { selector: '.selo' })).toBeInTheDocument();
   });
 
   test('falha de autenticação mostra o aviso de token e não chama o webhook para os próximos arquivos', async () => {

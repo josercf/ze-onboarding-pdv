@@ -4,6 +4,7 @@ import { TIPOS_CONFIG } from '@shared/config/index';
 import { TIPOS } from '@shared/schemas/index';
 import type { ClienteN8n } from '../api/clienteN8n';
 import { obterDuracaoVideo } from '../anexos/duracaoVideo';
+import { seloDe } from '../anexos/seloDe';
 import { formatarMb, inferirMime, validarArquivo, validarArquivoBasico } from '../anexos/validarArquivo';
 import { CLASSIFICACAO_PENDENTE, CLASSIFICACAO_VIDEO, faltantes, podeAvancar, type Acao, type Anexo, type EstadoApp } from '../fluxo/estadoApp';
 import { executarFilaClassificacao, type ItemClassificacao } from '../fluxo/filaClassificacao';
@@ -18,14 +19,6 @@ function Miniatura({ arquivo }: { arquivo: File }) {
   const [url] = useState(() => URL.createObjectURL(arquivo));
   useEffect(() => () => URL.revokeObjectURL(url), [url]);
   return <img src={url} alt="" width={64} height={64} />;
-}
-
-/** Texto do selo de estado de um anexo na lista. */
-export function seloDe(a: Anexo): string {
-  if (a.classificacao.estado === 'pendente' || a.classificacao.estado === 'classificando') return 'Classificando...';
-  if (a.tipo && a.classificacao.tipoDetectado === a.tipo) return `${TIPOS_CONFIG[a.tipo].rotulo}, detectado`;
-  if (a.tipo) return TIPOS_CONFIG[a.tipo].rotulo;
-  return 'Escolha o tipo';
 }
 
 const classificando = (a: Anexo) => a.classificacao.estado === 'pendente' || a.classificacao.estado === 'classificando';
@@ -117,8 +110,8 @@ export function EtapaAnexos({ estado, despachar, cliente, obterDuracao = obterDu
                 <small>{formatarMb(a.arquivo.size)}{a.duracaoS != null && <> · <span>{a.duracaoS} s</span></>}</small>
                 <span className="selo">{seloDe(a)}</span>
                 <select aria-label={`Tipo de ${a.nome}`} value={a.tipo ?? ''} disabled={classificando(a)} onChange={(e) => mudarTipo(a, e.target.value)}>
-                  <option value="" label="Escolha o tipo" />
-                  {TIPOS.map((t) => <option key={t} value={t} label={TIPOS_CONFIG[t].rotulo} />)}
+                  <option value="">Escolha o tipo</option>
+                  {TIPOS.map((t) => <option key={t} value={t}>{TIPOS_CONFIG[t].rotulo}</option>)}
                 </select>
                 {a.classificacao.estado === 'falhou' && <small className="erro">Não foi possível classificar automaticamente.</small>}
                 {a.classificacao.estado === 'concluida' && a.tipo === null && a.classificacao.motivo && <small className="motivo">{a.classificacao.motivo}</small>}
