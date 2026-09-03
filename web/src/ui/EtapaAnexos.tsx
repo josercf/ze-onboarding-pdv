@@ -10,6 +10,7 @@ import { CLASSIFICACAO_PENDENTE, CLASSIFICACAO_VIDEO, faltantes, podeAvancar, ty
 import { executarFilaClassificacao, type ItemClassificacao } from '../fluxo/filaClassificacao';
 import type { TipoAnexo } from '../tipos';
 import { Botoes } from './componentes';
+import { PainelDocumentos } from './PainelDocumentos';
 
 interface Props { estado: EstadoApp; despachar: (a: Acao) => void; cliente: Pick<ClienteN8n, 'classificarArquivo'>; obterDuracao?: (arquivo: File) => Promise<number | null> }
 
@@ -27,6 +28,13 @@ export function EtapaAnexos({ estado, despachar, cliente, obterDuracao = obterDu
   const [recusados, setRecusados] = useState<string[]>([]);
   const [errosLinha, setErrosLinha] = useState<Record<string, string>>({});
   const entradaRef = useRef<HTMLInputElement>(null);
+  const tipoSugerido = useRef<TipoAnexo | null>(null);
+  const [estreito] = useState(() => typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 720px)').matches);
+
+  function escolherDocumento(tipo: TipoAnexo) {
+    tipoSugerido.current = tipo;
+    entradaRef.current?.click();
+  }
 
   const semTokenValido = estado.anexos.some((a) => a.classificacao.estado === 'falhou' && a.classificacao.erroCodigo === 'auth');
 
@@ -56,13 +64,16 @@ export function EtapaAnexos({ estado, despachar, cliente, obterDuracao = obterDu
       const mime = inferirMime(arquivo);
       const video = mime.startsWith('video/');
       const duracaoS = video ? await obterDuracao(arquivo) : null;
+      const sugerido = tipoSugerido.current;
+      const tipo: TipoAnexo | null = video ? 'video_geral' : sugerido && validarArquivo(arquivo, sugerido).ok ? sugerido : null;
       const anexo: Anexo = {
-        arquivoId: crypto.randomUUID(), arquivo, nome: arquivo.name, mime, tipo: video ? 'video_geral' : null, duracaoS, estado: 'na_fila',
+        arquivoId: crypto.randomUUID(), arquivo, nome: arquivo.name, mime, tipo, duracaoS, estado: 'na_fila',
         classificacao: video ? CLASSIFICACAO_VIDEO : CLASSIFICACAO_PENDENTE,
       };
       despachar({ tipo: 'anexo_adicionar', valor: anexo });
       if (!video) novos.push(anexo);
     }
+    tipoSugerido.current = null;
     setRecusados(motivos);
     classificar(novos);
   }
@@ -128,6 +139,9 @@ export function EtapaAnexos({ estado, despachar, cliente, obterDuracao = obterDu
           {motivoBloqueio && <small className="motivo-bloqueio" role="status">{motivoBloqueio}</small>}
         </Botoes>
       </div>
+      <aside className="coluna-painel">
+        <PainelDocumentos estado={estado} aberto={!estreito} aoEscolher={escolherDocumento} />
+      </aside>
     </section>
   );
 }

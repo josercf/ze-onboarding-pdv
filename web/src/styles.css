@@ -48,8 +48,23 @@ th, td { text-align: left; padding: 0.4rem; border-bottom: 1px solid var(--cor-b
 .classificacao-falhou .selo { color: var(--cor-atencao); }
 .motivo { color: var(--cor-neutra); }
 .motivo-bloqueio { color: var(--cor-neutra); align-self: center; }
+.etapa-anexos { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 1.5rem; align-items: start; }
+.coluna-arquivos { min-width: 0; }
+.painel-docs { border: 1px solid var(--cor-borda); border-radius: 8px; background: #fff; padding: 0.5rem 0.75rem; position: sticky; top: 1rem; }
+.painel-docs summary { cursor: pointer; font-weight: 600; }
+.painel-docs ul { list-style: none; padding: 0; margin: 0.5rem 0 0; }
+.painel-docs li button { width: 100%; display: grid; grid-template-columns: 1fr auto; column-gap: 0.5rem; text-align: left; background: none; color: var(--cor-texto); border: 0; border-bottom: 1px solid var(--cor-borda); border-radius: 0; padding: 0.5rem 0; }
+.painel-docs li button small { grid-column: 1; color: var(--cor-neutra); }
+.painel-docs li button .situacao { grid-column: 2; grid-row: 1 / span 2; align-self: center; font-weight: 600; }
+.painel-docs .ok .situacao { color: var(--cor-conforme); }
+.painel-docs .falta .situacao { color: var(--cor-atencao); }
+@media (max-width: 720px) {
+  .etapa-anexos { grid-template-columns: 1fr; }
+  .coluna-painel { order: -1; }
+  .painel-docs { position: static; }
+}
 @media print {
-  .botoes, .etapas, .zona, button, .introducao { display: none !important; }
+  .botoes, .etapas, .zona, button, .introducao, .painel-docs { display: none !important; }
   .app { max-width: none; padding: 0; }
   .evidencias video { display: none; }
 }

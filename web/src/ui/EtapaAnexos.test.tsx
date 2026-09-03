@@ -146,4 +146,27 @@ describe('EtapaAnexos', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Voltar' }));
     expect(screen.getByTestId('etapa')).toHaveTextContent('1');
   });
+
+  test('clicar em um documento do checklist abre o seletor e atribui o tipo ao arquivo enviado, mesmo com classificação diferente', async () => {
+    const abrir = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {});
+    render(<Harness classificar={porNome({ 'nota.jpeg': classificacaoDe('fachada', 0.95) })} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Adicionar NF Ambev' }));
+    expect(abrir).toHaveBeenCalledTimes(1);
+    await userEvent.upload(entrada(), arquivo('nota.jpeg', 'image/jpeg'));
+    await waitFor(() => expect(within(linha('nota.jpeg')).getByRole('combobox')).toBeEnabled());
+    expect(within(linha('nota.jpeg')).getByRole('combobox')).toHaveValue('nf_ambev');
+    expect(within(linha('nota.jpeg')).getByText('NF Ambev', { selector: '.selo' })).toBeInTheDocument();
+    abrir.mockRestore();
+  });
+
+  test('no celular o painel começa recolhido', async () => {
+    const original = window.matchMedia;
+    window.matchMedia = ((consulta: string) => ({ matches: consulta.includes('720px'), media: consulta, onchange: null, addListener: () => {}, removeListener: () => {}, addEventListener: () => {}, removeEventListener: () => {}, dispatchEvent: () => false })) as typeof window.matchMedia;
+    try {
+      render(<Harness classificar={porNome({})} />);
+      expect(screen.getByText(/Documentos do PDV/).closest('details')).not.toHaveAttribute('open');
+    } finally {
+      window.matchMedia = original;
+    }
+  });
 });
