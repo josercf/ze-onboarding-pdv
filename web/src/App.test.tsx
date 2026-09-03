@@ -8,3 +8,8 @@ test('exibe o título e começa na etapa 1', () => {
   const atual = screen.getByRole('list', { name: 'Etapas' }).querySelector('[aria-current="step"]');
   expect(atual).toHaveTextContent('Dados do PDV');
 });
+
+test('parágrafo introdutório usa a classe escondida na impressão', () => {
+  render(<App />);
+  expect(screen.getByText('Envie os dados e os arquivos do seu ponto de venda para a validação.')).toHaveClass('introducao');
+});

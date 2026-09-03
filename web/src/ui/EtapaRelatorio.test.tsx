@@ -42,6 +42,7 @@ describe('EtapaRelatorio', () => {
     expect((consolidar.mock.calls[0][0] as { verificacoes: unknown[] }).verificacoes).toHaveLength(16);
     expect(screen.getByText(/google\/gemini-2\.5-flash/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 't=00:24' })).toBeInTheDocument();
+    expect(cabecalho).not.toHaveClass('introducao');
   });
 
   test('caso reprovado: recomendação Não apto e divergentes destacados', async () => {

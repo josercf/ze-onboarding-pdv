@@ -17,7 +17,7 @@ export default function App() {
     <main className="app">
       <header>
         <h1>Onboarding de PDV</h1>
-        <p>Envie os dados e os arquivos do seu ponto de venda para a validação.</p>
+        <p className="introducao">Envie os dados e os arquivos do seu ponto de venda para a validação.</p>
         <ol className="etapas" aria-label="Etapas">
           {ETAPAS.map((nome, i) => <li key={nome} aria-current={estado.etapa === i + 1 ? 'step' : undefined}>{nome}</li>)}
         </ol>

@@ -44,7 +44,7 @@ th, td { text-align: left; padding: 0.4rem; border-bottom: 1px solid var(--cor-b
 .recomendacao { font-size: 1.2rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 8px; display: inline-block; color: #fff; }
 .recomendacao.apto { background: var(--cor-conforme); } .recomendacao.nao_apto { background: var(--cor-divergente); } .recomendacao.revisao_manual { background: var(--cor-atencao); }
 @media print {
-  .botoes, .etapas, .zona, button, header p:first-of-type { display: none !important; }
+  .botoes, .etapas, .zona, button, .introducao { display: none !important; }
   .app { max-width: none; padding: 0; }
   .evidencias video { display: none; }
 }
