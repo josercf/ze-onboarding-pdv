@@ -5,7 +5,7 @@ import { TIPOS } from '@shared/schemas/index';
 import { obterDuracaoVideo } from '../anexos/duracaoVideo';
 import { sugerirTipo } from '../anexos/sugerirTipo';
 import { formatarMb, inferirMime, validarArquivo, validarArquivoBasico } from '../anexos/validarArquivo';
-import { podeAvancar, type Acao, type Anexo, type EstadoApp } from '../fluxo/estadoApp';
+import { CLASSIFICACAO_PENDENTE, podeAvancar, type Acao, type Anexo, type EstadoApp } from '../fluxo/estadoApp';
 import type { TipoAnexo } from '../tipos';
 import { Botoes } from './componentes';
 
@@ -30,7 +30,7 @@ export function EtapaAnexos({ estado, despachar, obterDuracao = obterDuracaoVide
       const sugerido = sugerirTipo(arquivo.name, mime);
       const tipo = sugerido && validarArquivo(arquivo, sugerido).ok ? sugerido : null;
       const duracaoS = mime.startsWith('video/') ? await obterDuracao(arquivo) : null;
-      const anexo: Anexo = { arquivoId: crypto.randomUUID(), arquivo, nome: arquivo.name, mime, tipo, duracaoS, estado: 'na_fila' };
+      const anexo: Anexo = { arquivoId: crypto.randomUUID(), arquivo, nome: arquivo.name, mime, tipo, duracaoS, estado: 'na_fila', classificacao: CLASSIFICACAO_PENDENTE };
       despachar({ tipo: 'anexo_adicionar', valor: anexo });
     }
     setRecusados(motivos);

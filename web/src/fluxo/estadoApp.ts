@@ -1,11 +1,17 @@
-import { regiaoDefault } from '@shared/config/index';
+import { limites, regiaoDefault, tiposObrigatorios } from '@shared/config/index';
+import { validarArquivo } from '../anexos/validarArquivo';
 import type { CodigoErroApi } from '../api/clienteN8n';
 import { validarCnpj } from '../cnpj/validarCnpj';
-import type { AnexoEnviado, Formulario, Observacao, Parecer, ParametrosRegiao, Receita, Recomendacao, TipoAnexo, Verificacao } from '../tipos';
+import type { AnexoEnviado, Formulario, Observacao, Parecer, ParametrosRegiao, Receita, Recomendacao, TipoAnexo, TipoDetectado, Verificacao } from '../tipos';
 import type { EstadoItem } from './filaAnalise';
+import type { EstadoClassificacao } from './filaClassificacao';
 
 export type Etapa = 1 | 2 | 3 | 4;
-export interface Anexo { arquivoId: string; arquivo: File; nome: string; mime: string; tipo: TipoAnexo | null; duracaoS: number | null; estado: EstadoItem; observacao?: Observacao; erro?: string; erroCodigo?: CodigoErroApi }
+export interface Classificacao { estado: EstadoClassificacao; tipoDetectado: TipoDetectado | null; confianca: number | null; motivo: string | null; erro?: string; erroCodigo?: CodigoErroApi }
+export interface Anexo { arquivoId: string; arquivo: File; nome: string; mime: string; tipo: TipoAnexo | null; duracaoS: number | null; estado: EstadoItem; observacao?: Observacao; erro?: string; erroCodigo?: CodigoErroApi; classificacao: Classificacao }
+
+export const CLASSIFICACAO_PENDENTE: Classificacao = { estado: 'pendente', tipoDetectado: null, confianca: null, motivo: null };
+export const CLASSIFICACAO_VIDEO: Classificacao = { estado: 'concluida', tipoDetectado: 'video_geral', confianca: 1, motivo: 'Vídeo MP4 só pode ser vídeo geral' };
 export interface EstadoApp {
   etapa: Etapa; formulario: Formulario; receita: Receita | null; receitaErro: string | null; parametros: ParametrosRegiao;
   anexos: Anexo[]; verificacoes: Verificacao[]; recomendacao: Recomendacao | null; parecer: Parecer | null; parecerErro: string | null;
@@ -17,6 +23,7 @@ export type Acao =
   | { tipo: 'anexo_adicionar'; valor: Anexo }
   | { tipo: 'anexo_remover'; arquivoId: string }
   | { tipo: 'anexo_tipo'; arquivoId: string; valor: TipoAnexo | null }
+  | { tipo: 'anexo_classificacao'; arquivoId: string; valor: Partial<Classificacao> & { estado: EstadoClassificacao } }
   | { tipo: 'anexo_estado'; valor: { arquivoId: string; estado: EstadoItem; observacao?: Observacao; erro?: string; erroCodigo?: CodigoErroApi } }
   | { tipo: 'resultado'; verificacoes: Verificacao[]; recomendacao: Recomendacao }
   | { tipo: 'parecer'; valor: Parecer | null; erro?: string | null }
@@ -54,7 +61,10 @@ export function errosFormulario(f: Formulario): string[] {
 
 export function podeAvancar(e: EstadoApp): boolean {
   if (e.etapa === 1) return errosFormulario(e.formulario).length === 0;
-  if (e.etapa === 2) return e.anexos.length > 0 && e.anexos.every((a) => a.tipo !== null);
+  if (e.etapa === 2) {
+    const prontos = e.anexos.every((a) => a.tipo !== null && a.classificacao.estado !== 'pendente' && a.classificacao.estado !== 'classificando');
+    return e.anexos.length > 0 && prontos && faltantes(e).length === 0;
+  }
   if (e.etapa === 3) return e.anexos.every((a) => a.estado === 'concluido' || a.estado === 'falhou');
   return false;
 }
@@ -69,6 +79,20 @@ export function observacoesDoEstado(e: EstadoApp): Observacao[] {
 
 const enderecoVazio = (f: Formulario) => Object.values(f.endereco).every((v) => v === '');
 
+/** Tipos obrigatórios para este formulário que ainda não têm nenhum anexo atribuído. */
+export function faltantes(e: EstadoApp): TipoAnexo[] {
+  const presentes = new Set(e.anexos.map((a) => a.tipo));
+  return tiposObrigatorios(e.formulario).filter((t) => !presentes.has(t));
+}
+
+/** Mantém o tipo escolhido pelo usuário; senão adota o detectado quando a confiança atinge o limiar e o formato do arquivo é aceito pelo tipo. */
+function tipoAposClassificacao(a: Anexo, c: Classificacao): TipoAnexo | null {
+  if (a.tipo !== null) return a.tipo;
+  if (c.estado !== 'concluida' || c.tipoDetectado === null || c.tipoDetectado === 'indefinido') return null;
+  if ((c.confianca ?? 0) < limites.confiancaMinimaClassificacao) return null;
+  return validarArquivo(a.arquivo, c.tipoDetectado).ok ? c.tipoDetectado : null;
+}
+
 export function reduzir(e: EstadoApp, acao: Acao): EstadoApp {
   switch (acao.tipo) {
     case 'formulario': return { ...e, formulario: { ...e.formulario, ...acao.valor } };
@@ -80,6 +104,14 @@ export function reduzir(e: EstadoApp, acao: Acao): EstadoApp {
     case 'anexo_adicionar': return e.anexos.some((a) => a.arquivoId === acao.valor.arquivoId) ? e : { ...e, anexos: [...e.anexos, acao.valor] };
     case 'anexo_remover': return { ...e, anexos: e.anexos.filter((a) => a.arquivoId !== acao.arquivoId) };
     case 'anexo_tipo': return { ...e, anexos: e.anexos.map((a) => (a.arquivoId === acao.arquivoId ? { ...a, tipo: acao.valor, estado: 'na_fila', observacao: undefined, erro: undefined } : a)) };
+    case 'anexo_classificacao': return {
+      ...e,
+      anexos: e.anexos.map((a) => {
+        if (a.arquivoId !== acao.arquivoId) return a;
+        const classificacao: Classificacao = { ...a.classificacao, ...acao.valor };
+        return { ...a, classificacao, tipo: tipoAposClassificacao(a, classificacao) };
+      }),
+    };
     case 'anexo_estado': return { ...e, anexos: e.anexos.map((a) => (a.arquivoId === acao.valor.arquivoId ? { ...a, estado: acao.valor.estado, observacao: acao.valor.observacao, erro: acao.valor.erro, erroCodigo: acao.valor.erroCodigo } : a)) };
     case 'resultado': return { ...e, verificacoes: acao.verificacoes, recomendacao: acao.recomendacao };
     case 'parecer': return { ...e, parecer: acao.valor, parecerErro: acao.erro ?? null };

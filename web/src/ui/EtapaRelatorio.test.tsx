@@ -15,7 +15,7 @@ const parecer: Parecer = { parecer: 'Material consistente com o declarado.', pon
 
 function estadoDe(entrada: EntradaMotor): EstadoApp {
   const { verificacoes, recomendacao } = avaliar(entrada);
-  const anexos: Anexo[] = entrada.observacoes.map((o) => ({ arquivoId: o.arquivo_id, arquivo: new File(['x'], o.nome, { type: o.mime }), nome: o.nome, mime: o.mime, tipo: o.tipo, duracaoS: null, estado: 'concluido', observacao: o }));
+  const anexos: Anexo[] = entrada.observacoes.map((o) => ({ arquivoId: o.arquivo_id, arquivo: new File(['x'], o.nome, { type: o.mime }), nome: o.nome, mime: o.mime, tipo: o.tipo, duracaoS: null, estado: 'concluido', observacao: o, classificacao: { estado: 'concluida', tipoDetectado: o.tipo, confianca: 0.9, motivo: 'teste' } }));
   return { ...estadoInicial(), etapa: 4, formulario: entrada.formulario, receita: entrada.receita, parametros: entrada.parametros, anexos, verificacoes, recomendacao };
 }
 

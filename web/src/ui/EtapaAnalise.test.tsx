@@ -4,11 +4,11 @@ import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
 import { describe, expect, test, vi } from 'vitest';
 import { ErroApi, type ClienteN8n } from '../api/clienteN8n';
-import { estadoInicial, reduzir, type Anexo, type EstadoApp } from '../fluxo/estadoApp';
+import { CLASSIFICACAO_PENDENTE, estadoInicial, reduzir, type Anexo, type EstadoApp } from '../fluxo/estadoApp';
 import type { Observacao } from '../tipos';
 import { EtapaAnalise } from './EtapaAnalise';
 
-const anexo = (id: string, tipo: Anexo['tipo']): Anexo => ({ arquivoId: id, arquivo: new File(['x'], `${id}.jpeg`, { type: 'image/jpeg' }), nome: `${id}.jpeg`, mime: 'image/jpeg', tipo, duracaoS: null, estado: 'na_fila' });
+const anexo = (id: string, tipo: Anexo['tipo']): Anexo => ({ arquivoId: id, arquivo: new File(['x'], `${id}.jpeg`, { type: 'image/jpeg' }), nome: `${id}.jpeg`, mime: 'image/jpeg', tipo, duracaoS: null, estado: 'na_fila', classificacao: CLASSIFICACAO_PENDENTE });
 const obs = (id: string, tipo: string): Observacao => ({
   arquivo_id: id, tipo: tipo as Observacao['tipo'], nome: `${id}.jpeg`, mime: 'image/jpeg', modelo: 'm', tokens: { entrada: 1, saida: 1 }, latencia_ms: 1,
   aderente_ao_tipo: true, confianca: 0.9, resumo: 'ok', qualidade: { nitidez: 'boa', iluminacao: 'boa', observacao: '' }, dados: {}, evidencias: [], alertas: [],
