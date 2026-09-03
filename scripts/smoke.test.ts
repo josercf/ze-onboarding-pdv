@@ -1,8 +1,8 @@
 import Ajv from 'ajv';
 import { describe, expect, test, vi } from 'vitest';
 import {
-  CODIGO_FALHA_REDE, CODIGO_HTTP_NAO_OK, CODIGO_OBSERVACAO_INVALIDA, CODIGO_PARECER_INVALIDO,
-  ErroSmoke, PNG, chamar, lerConfig, montarFormDataAnalise, montarPayloadConsolidar, rodarSmoke, validarObservacao, validarParecer,
+  CODIGO_CLASSIFICACAO_INVALIDA, CODIGO_FALHA_REDE, CODIGO_HTTP_NAO_OK, CODIGO_OBSERVACAO_INVALIDA, CODIGO_PARECER_INVALIDO,
+  ErroSmoke, PNG, chamar, lerConfig, montarFormDataAnalise, montarFormDataClassificacao, montarPayloadConsolidar, rodarSmoke, validarClassificacao, validarObservacao, validarParecer,
 } from './smoke';
 
 const OBSERVACAO_VALIDA = {
@@ -18,6 +18,11 @@ const OBSERVACAO_VALIDA = {
 const PARECER_VALIDO = {
   parecer: 'Texto de teste.', pontos_de_atencao: [], recomendacao_sugerida: 'apto', justificativa: 'ok',
   modelo: 'google/gemini-2.5-pro', tokens: { entrada: 500, saida: 80 },
+};
+
+const CLASSIFICACAO_VALIDA = {
+  arquivo_id: 'smoke-0', nome: 'smoke.png', mime: 'image/png', tipo_detectado: 'fachada', confianca: 0.92, motivo: 'Frente de loja.',
+  modelo: 'google/gemini-2.5-flash', tokens: { entrada: 1200, saida: 40 }, latencia_ms: 1500,
 };
 
 const jsonResponse = (status: number, corpo: unknown) => new Response(JSON.stringify(corpo), { status, headers: { 'Content-Type': 'application/json' } });
@@ -50,6 +55,30 @@ describe('montarFormDataAnalise', () => {
     expect(arquivo.name).toBe('smoke.png');
     expect(arquivo.type).toBe('image/png');
     expect(arquivo.size).toBe(PNG.length);
+  });
+});
+
+describe('montarFormDataClassificacao', () => {
+  test('monta o multipart só com arquivo e arquivo_id, sem tipo nem contexto', () => {
+    const fd = montarFormDataClassificacao();
+    expect((fd.get('arquivo') as File).name).toBe('smoke.png');
+    expect(fd.get('arquivo_id')).toBe('smoke-0');
+    expect(fd.get('tipo')).toBeNull();
+    expect(fd.get('contexto')).toBeNull();
+  });
+});
+
+describe('validarClassificacao', () => {
+  const ajv = new Ajv({ allErrors: true, strict: false });
+  test('classificação válida não lança', () => expect(() => validarClassificacao(ajv, CLASSIFICACAO_VALIDA)).not.toThrow());
+  test('tipo fora do enum lança ErroSmoke código 7', () => {
+    try {
+      validarClassificacao(ajv, { ...CLASSIFICACAO_VALIDA, tipo_detectado: 'geladeira' });
+      throw new Error('deveria ter lançado');
+    } catch (e) {
+      expect(e).toBeInstanceOf(ErroSmoke);
+      expect((e as ErroSmoke).codigo).toBe(CODIGO_CLASSIFICACAO_INVALIDA);
+    }
   });
 });
 
@@ -178,14 +207,20 @@ describe('validarParecer', () => {
 
 describe('rodarSmoke', () => {
   const env = { N8N_BASE_URL: 'https://n8n.exemplo.com', N8N_TOKEN: 'tok' };
+  const tresOk = () => vi.fn()
+    .mockResolvedValueOnce(jsonResponse(200, CLASSIFICACAO_VALIDA))
+    .mockResolvedValueOnce(jsonResponse(200, OBSERVACAO_VALIDA))
+    .mockResolvedValueOnce(jsonResponse(200, PARECER_VALIDO));
 
-  test('dois HTTP 200 válidos: código 0 e as quatro linhas esperadas, nesta ordem', async () => {
+  test('três HTTP 200 válidos: código 0 e as seis linhas esperadas, nesta ordem', async () => {
     const log = vi.fn();
-    const fetchFn = vi.fn().mockResolvedValueOnce(jsonResponse(200, OBSERVACAO_VALIDA)).mockResolvedValueOnce(jsonResponse(200, PARECER_VALIDO));
+    const fetchFn = tresOk();
     const codigo = await rodarSmoke(fetchFn as unknown as typeof fetch, env, log);
     expect(codigo).toBe(0);
-    expect(fetchFn).toHaveBeenCalledTimes(2);
+    expect(fetchFn).toHaveBeenCalledTimes(3);
     expect(log.mock.calls.map((c) => c[0])).toEqual([
+      expect.stringMatching(/^classificar-arquivo: HTTP 200 em \d+ ms$/),
+      'classificação ok: fachada (confiança 0.92)',
       expect.stringMatching(/^analisar-arquivo: HTTP 200 em \d+ ms$/),
       'observação ok: Fachada de loja aberta.',
       expect.stringMatching(/^consolidar: HTTP 200 em \d+ ms$/),
@@ -202,29 +237,39 @@ describe('rodarSmoke', () => {
     expect(logErro).toHaveBeenCalledWith(expect.stringMatching(/N8N_BASE_URL e N8N_TOKEN/));
   });
 
-  test('primeira chamada com HTTP não ok: código 2 e consolidar não é chamado', async () => {
+  test('primeira chamada (classificação) com HTTP não ok: código 2 e as demais não são chamadas', async () => {
     const fetchFn = vi.fn().mockResolvedValueOnce(jsonResponse(401, { erro: 'sem token' }));
     const codigo = await rodarSmoke(fetchFn as unknown as typeof fetch, env, vi.fn(), vi.fn());
     expect(codigo).toBe(2);
     expect(fetchFn).toHaveBeenCalledTimes(1);
   });
 
-  test('observação fora do schema: código 3 e consolidar não é chamado', async () => {
-    const { resumo: _resumo, ...semResumo } = OBSERVACAO_VALIDA;
-    const fetchFn = vi.fn().mockResolvedValueOnce(jsonResponse(200, semResumo));
+  test('classificação fora do schema: código 7 e as demais não são chamadas', async () => {
+    const fetchFn = vi.fn().mockResolvedValueOnce(jsonResponse(200, { ...CLASSIFICACAO_VALIDA, confianca: 'alta' }));
     const codigo = await rodarSmoke(fetchFn as unknown as typeof fetch, env, vi.fn(), vi.fn());
-    expect(codigo).toBe(3);
+    expect(codigo).toBe(CODIGO_CLASSIFICACAO_INVALIDA);
     expect(fetchFn).toHaveBeenCalledTimes(1);
   });
 
-  test('parecer fora do schema: código 4', async () => {
-    const fetchFn = vi.fn().mockResolvedValueOnce(jsonResponse(200, OBSERVACAO_VALIDA)).mockResolvedValueOnce(jsonResponse(200, { ...PARECER_VALIDO, recomendacao_sugerida: 'talvez' }));
+  test('observação fora do schema: código 3 e consolidar não é chamado', async () => {
+    const { resumo: _resumo, ...semResumo } = OBSERVACAO_VALIDA;
+    const fetchFn = vi.fn().mockResolvedValueOnce(jsonResponse(200, CLASSIFICACAO_VALIDA)).mockResolvedValueOnce(jsonResponse(200, semResumo));
     const codigo = await rodarSmoke(fetchFn as unknown as typeof fetch, env, vi.fn(), vi.fn());
-    expect(codigo).toBe(4);
+    expect(codigo).toBe(3);
     expect(fetchFn).toHaveBeenCalledTimes(2);
   });
 
-  test('falha de rede na primeira chamada: código de falha de rede, mensagem com a causa, e consolidar não é chamado', async () => {
+  test('parecer fora do schema: código 4', async () => {
+    const fetchFn = vi.fn()
+      .mockResolvedValueOnce(jsonResponse(200, CLASSIFICACAO_VALIDA))
+      .mockResolvedValueOnce(jsonResponse(200, OBSERVACAO_VALIDA))
+      .mockResolvedValueOnce(jsonResponse(200, { ...PARECER_VALIDO, recomendacao_sugerida: 'talvez' }));
+    const codigo = await rodarSmoke(fetchFn as unknown as typeof fetch, env, vi.fn(), vi.fn());
+    expect(codigo).toBe(4);
+    expect(fetchFn).toHaveBeenCalledTimes(3);
+  });
+
+  test('falha de rede na primeira chamada: código de falha de rede, mensagem com a causa, e as demais não são chamadas', async () => {
     const fetchFn = vi.fn().mockRejectedValueOnce(new Error('ECONNREFUSED'));
     const logErro = vi.fn();
     const codigo = await rodarSmoke(fetchFn as unknown as typeof fetch, env, vi.fn(), logErro);
@@ -234,16 +279,19 @@ describe('rodarSmoke', () => {
   });
 
   test('corpo 2xx inválido (não é JSON) na chamada de analisar-arquivo: código 3 e consolidar não é chamado', async () => {
-    const fetchFn = vi.fn().mockResolvedValueOnce(new Response('<html>erro</html>', { status: 200 }));
+    const fetchFn = vi.fn().mockResolvedValueOnce(jsonResponse(200, CLASSIFICACAO_VALIDA)).mockResolvedValueOnce(new Response('<html>erro</html>', { status: 200 }));
     const codigo = await rodarSmoke(fetchFn as unknown as typeof fetch, env, vi.fn(), vi.fn());
     expect(codigo).toBe(CODIGO_OBSERVACAO_INVALIDA);
-    expect(fetchFn).toHaveBeenCalledTimes(1);
+    expect(fetchFn).toHaveBeenCalledTimes(2);
   });
 
   test('corpo 2xx inválido (não é JSON) na chamada de consolidar: código 4', async () => {
-    const fetchFn = vi.fn().mockResolvedValueOnce(jsonResponse(200, OBSERVACAO_VALIDA)).mockResolvedValueOnce(new Response('<html>erro</html>', { status: 200 }));
+    const fetchFn = vi.fn()
+      .mockResolvedValueOnce(jsonResponse(200, CLASSIFICACAO_VALIDA))
+      .mockResolvedValueOnce(jsonResponse(200, OBSERVACAO_VALIDA))
+      .mockResolvedValueOnce(new Response('<html>erro</html>', { status: 200 }));
     const codigo = await rodarSmoke(fetchFn as unknown as typeof fetch, env, vi.fn(), vi.fn());
     expect(codigo).toBe(CODIGO_PARECER_INVALIDO);
-    expect(fetchFn).toHaveBeenCalledTimes(2);
+    expect(fetchFn).toHaveBeenCalledTimes(3);
   });
 });

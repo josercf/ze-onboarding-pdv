@@ -1,7 +1,7 @@
 import Ajv from 'ajv';
 import { existsSync } from 'node:fs';
 import exemploOk from '../shared/fixtures/exemplo-ok.json';
-import { schemaObservacaoCompleta, schemaParecerCompleto } from '../shared/schemas/index';
+import { schemaClassificacaoCompleta, schemaObservacaoCompleta, schemaParecerCompleto } from '../shared/schemas/index';
 
 /**
  * Códigos de saída do processo (contrato de `pnpm smoke`). `rodarSmoke` só devolve 0 a 5; o código
@@ -16,6 +16,8 @@ import { schemaObservacaoCompleta, schemaParecerCompleto } from '../shared/schem
  *   5 falha de rede: fetchFn rejeitou antes de haver qualquer resposta HTTP (DNS, conexão
  *     recusada, timeout de baixo nível), em qualquer uma das duas chamadas (chamar).
  *   6 erro inesperado, não classificado nos códigos acima (só no ponto de entrada de CLI).
+ *   7 resposta de classificar-arquivo com HTTP 2xx mas corpo não é JSON válido, ou a classificação
+ *     não passa no schema de shared/schemas (chamar / validarClassificacao).
  */
 export const CODIGO_ENV_AUSENTE = 1;
 export const CODIGO_HTTP_NAO_OK = 2;
@@ -23,6 +25,7 @@ export const CODIGO_OBSERVACAO_INVALIDA = 3;
 export const CODIGO_PARECER_INVALIDO = 4;
 export const CODIGO_FALHA_REDE = 5;
 export const CODIGO_ERRO_INESPERADO = 6;
+export const CODIGO_CLASSIFICACAO_INVALIDA = 7;
 
 export const PNG = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
@@ -55,6 +58,13 @@ export function montarFormDataAnalise(png: Buffer = PNG): FormData {
   fd.append('tipo', 'fachada');
   fd.append('arquivo_id', 'smoke-1');
   fd.append('contexto', JSON.stringify({ cnpj: '11222333000181' }));
+  return fd;
+}
+
+export function montarFormDataClassificacao(png: Buffer = PNG): FormData {
+  const fd = new FormData();
+  fd.append('arquivo', new Blob([new Uint8Array(png)], { type: 'image/png' }), 'smoke.png');
+  fd.append('arquivo_id', 'smoke-0');
   return fd;
 }
 
@@ -119,6 +129,12 @@ export function validarObservacao(ajv: Ajv, observacao: unknown): void {
   }
 }
 
+export function validarClassificacao(ajv: Ajv, classificacao: unknown): void {
+  if (!ajv.validate(schemaClassificacaoCompleta(), classificacao)) {
+    throw new ErroSmoke(CODIGO_CLASSIFICACAO_INVALIDA, `Classificação fora do schema: ${ajv.errorsText()}`);
+  }
+}
+
 export function validarParecer(ajv: Ajv, parecer: unknown): void {
   if (!ajv.validate(schemaParecerCompleto(), parecer)) {
     throw new ErroSmoke(CODIGO_PARECER_INVALIDO, `Parecer fora do schema: ${ajv.errorsText()}`);
@@ -134,15 +150,19 @@ function finalizarErro(e: unknown, logErro: Logger): number {
 }
 
 /**
- * Chama analisar-arquivo com um PNG sintético e depois consolidar com o exemplo-ok, validando as
- * duas respostas contra os schemas de shared/schemas. Devolve o código de saída do processo (0 a
- * 5; ver a tabela no topo do arquivo). Qualquer erro que não seja ErroSmoke é relançado (a promise
- * rejeita); só o ponto de entrada de CLI abaixo trata isso, com o código 6.
+ * Chama classificar-arquivo e analisar-arquivo com um PNG sintético e depois consolidar com o
+ * exemplo-ok, validando as três respostas contra os schemas de shared/schemas. Devolve o código de
+ * saída do processo (0 a 5, ou 7; ver a tabela no topo do arquivo). Qualquer erro que não seja
+ * ErroSmoke é relançado (a promise rejeita); só o ponto de entrada de CLI abaixo trata isso, com o código 6.
  */
 export async function rodarSmoke(fetchFn: typeof fetch, env: NodeJS.ProcessEnv, log: Logger = console.log, logErro: Logger = console.error): Promise<number> {
   try {
     const cfg = lerConfig(env);
     const ajv = new Ajv({ allErrors: true, strict: false });
+
+    const classificacao = (await chamar(fetchFn, cfg, 'classificar-arquivo', { method: 'POST', body: montarFormDataClassificacao() }, CODIGO_CLASSIFICACAO_INVALIDA, log)) as Record<string, unknown>;
+    validarClassificacao(ajv, classificacao);
+    log(`classificação ok: ${classificacao.tipo_detectado} (confiança ${classificacao.confianca})`);
 
     const observacao = (await chamar(fetchFn, cfg, 'analisar-arquivo', { method: 'POST', body: montarFormDataAnalise() }, CODIGO_OBSERVACAO_INVALIDA, log)) as Record<string, unknown>;
     validarObservacao(ajv, observacao);
