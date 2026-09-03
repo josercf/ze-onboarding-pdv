@@ -48,14 +48,30 @@ describe('EtapaRelatorio', () => {
   test('caso reprovado: recomendação Não apto e divergentes destacados', async () => {
     render(<Harness cliente={clienteCom(vi.fn(async () => ({ ...parecer, recomendacao_sugerida: 'nao_apto' })))} entrada={naoOk()} />);
     expect(screen.getByTestId('recomendacao')).toHaveTextContent('Não apto');
-    expect(screen.getAllByText('Divergente')).toHaveLength(2);
-    expect(screen.getAllByText('Atenção')).toHaveLength(4);
+    expect(within(screen.getByRole('table')).getAllByText('Divergente')).toHaveLength(2);
+    expect(within(screen.getByRole('table')).getAllByText('Atenção')).toHaveLength(4);
     expect(await screen.findByText('Material consistente com o declarado.')).toBeInTheDocument();
   });
 
   test('modelo discordando das regras gera nota', async () => {
     render(<Harness cliente={clienteCom(vi.fn(async () => ({ ...parecer, recomendacao_sugerida: 'revisao_manual' })))} entrada={ok()} />);
     expect(await screen.findByText(/O modelo sugeriu "Revisão manual"/)).toBeInTheDocument();
+  });
+
+  test('o resumo mostra a contagem por situação nos dois casos', async () => {
+    const { unmount } = render(<Harness cliente={clienteCom(vi.fn(async () => parecer))} entrada={ok()} />);
+    const itens = () => within(screen.getByRole('list', { name: 'Contagem por situação' })).getAllByRole('listitem');
+    expect(itens().map((li) => li.textContent)).toEqual(['16 Conforme', '0 Divergente', '0 Atenção', '0 Não verificável']);
+    unmount();
+
+    render(<Harness cliente={clienteCom(vi.fn(async () => parecer))} entrada={naoOk()} />);
+    expect(itens().map((li) => li.textContent)).toEqual(['9 Conforme', '2 Divergente', '4 Atenção', '1 Não verificável']);
+  });
+
+  test('os pontos de atenção do parecer aparecem no topo, uma única vez', async () => {
+    render(<Harness cliente={clienteCom(vi.fn(async () => parecer))} entrada={ok()} />);
+    expect(await screen.findByText('Conferir horário na fachada')).toBeInTheDocument();
+    expect(screen.getAllByText('Conferir horário na fachada')).toHaveLength(1);
   });
 
   test('falha no parecer mostra erro e permite gerar novamente', async () => {

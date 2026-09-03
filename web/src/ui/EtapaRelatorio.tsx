@@ -6,6 +6,7 @@ import { formatarCnpj } from '../cnpj/validarCnpj';
 import { observacoesDoEstado, type Acao, type EstadoApp } from '../fluxo/estadoApp';
 import type { TipoDetectado } from '../tipos';
 import { Botoes } from './componentes';
+import { contarPorStatus } from './contagens';
 import { estimarCusto } from './custo';
 import { ROTULO_RECOMENDACAO, ROTULO_STATUS } from './rotulos';
 
@@ -60,6 +61,8 @@ export function EtapaRelatorio({ estado, despachar, cliente, agora = () => new D
   }
 
   const custo = estimarCusto([...observacoes, ...(estado.parecer ? [estado.parecer] : [])]);
+  const contagens = contarPorStatus(estado.verificacoes);
+  const SITUACOES = ['conforme', 'divergente', 'atencao', 'nao_verificavel'] as const;
   const discorda = estado.parecer && estado.parecer.recomendacao_sugerida !== recomendacao;
   const classificados = estado.anexos.filter((a) => a.classificacao.estado === 'concluida' && a.mime !== 'video/mp4');
   const aceitos = classificados.filter((a) => a.classificacao.tipoDetectado === a.tipo).length;
@@ -70,6 +73,17 @@ export function EtapaRelatorio({ estado, despachar, cliente, agora = () => new D
         <h2 id="t-relatorio">Relatório de conformidade</h2>
         <p><strong>{estado.receita?.razaoSocial || 'PDV'}</strong><br /><span>{formatarCnpj(estado.formulario.cnpj)}</span><br /><span>{geradoEm.toLocaleString('pt-BR')}</span></p>
         <p className={`recomendacao ${recomendacao}`} data-testid="recomendacao">Recomendação: {ROTULO_RECOMENDACAO[recomendacao]}</p>
+        <ul className="contagens" aria-label="Contagem por situação">
+          {SITUACOES.map((s) => (
+            <li key={s} className={s}><strong>{contagens[s]}</strong> <span>{ROTULO_STATUS[s]}</span></li>
+          ))}
+        </ul>
+        {estado.parecer && estado.parecer.pontos_de_atencao.length > 0 && (
+          <div className="pontos-atencao">
+            <h3>Pontos de atenção</h3>
+            <ul>{estado.parecer.pontos_de_atencao.map((p) => <li key={p}>{p}</li>)}</ul>
+          </div>
+        )}
       </header>
 
       <div className="tabela">
@@ -121,7 +135,6 @@ export function EtapaRelatorio({ estado, despachar, cliente, agora = () => new D
       {estado.parecer ? (
         <div className="parecer">
           <p>{estado.parecer.parecer}</p>
-          {estado.parecer.pontos_de_atencao.length > 0 && <ul>{estado.parecer.pontos_de_atencao.map((p) => <li key={p}>{p}</li>)}</ul>}
           <p><small>{estado.parecer.justificativa}</small></p>
           {discorda && <p className="aviso">O modelo sugeriu "{ROTULO_RECOMENDACAO[estado.parecer.recomendacao_sugerida]}"; a recomendação oficial é a das regras.</p>}
         </div>

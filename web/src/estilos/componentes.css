@@ -76,6 +76,18 @@ progress { width: 100%; height: var(--espaco-3); }
 .painel-docs .ok .situacao { color: var(--cor-conforme); }
 .painel-docs .falta .situacao { color: var(--cor-atencao); }
 
+.cabecalho { display: flex; flex-direction: column; gap: var(--espaco-3); align-items: flex-start; margin: 0 0 var(--espaco-5); }
+.contagens { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: var(--espaco-4); }
+.contagens li { display: flex; align-items: baseline; gap: var(--espaco-2); }
+.contagens strong { font-size: var(--fonte-5); line-height: 1; }
+.contagens .conforme strong { color: var(--cor-conforme); }
+.contagens .divergente strong { color: var(--cor-divergente); }
+.contagens .atencao strong { color: var(--cor-atencao); }
+.contagens .nao_verificavel strong { color: var(--cor-neutra); }
+.pontos-atencao { border-left: 4px solid var(--cor-atencao); padding-left: var(--espaco-3); }
+.pontos-atencao h3 { font-size: var(--fonte-3); margin: 0 0 var(--espaco-1); }
+.pontos-atencao ul { margin: 0; padding-left: var(--espaco-4); }
+
 @media (max-width: 720px) {
   .etapa-anexos { grid-template-columns: 1fr; }
   .coluna-painel { order: -1; }

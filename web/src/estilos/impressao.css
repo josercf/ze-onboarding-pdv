@@ -1,5 +1,25 @@
+@page { size: A4; margin: 14mm; }
+
 @media print {
   .botoes, .etapas, .zona, button, .introducao, .painel-docs { display: none !important; }
   .app { max-width: none; padding: 0; }
   .evidencias video { display: none; }
+
+  body { background: #fff; font-size: 10pt; }
+  .secao, .cartao, .anexos li, .fila li, .evidencias li { box-shadow: none; }
+
+  thead { display: table-header-group; }
+  tr, .evidencias li, .contagens li { break-inside: avoid; }
+  h2, h3 { break-after: avoid; }
+  .evidencias { break-before: page; }
+
+  .badge { background: transparent !important; border-color: currentColor; }
+  .badge.conforme { color: var(--cor-conforme); }
+  .badge.divergente { color: var(--cor-divergente); }
+  .badge.atencao { color: var(--cor-atencao); }
+  .badge.nao_verificavel { color: var(--cor-neutra); }
+  .recomendacao { background: transparent !important; border: 2px solid currentColor; }
+  .recomendacao.apto { color: var(--cor-conforme); }
+  .recomendacao.nao_apto { color: var(--cor-divergente); }
+  .recomendacao.revisao_manual { color: var(--cor-atencao); }
 }
