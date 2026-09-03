@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { carregarRecursos } from '../recursos';
-import { inferirMime, tamanhoBase64, validarEntrada } from './validar-entrada.js';
+import { inferirMime, tamanhoBase64, validarEntrada, validarEntradaClassificacao } from './validar-entrada.js';
 
 const RECURSOS = carregarRecursos();
 const item = (extra = {}) => ({ body: { tipo: 'refrigerador', arquivo_id: 'a1', contexto: '{"cnpj":"11222333000181"}' }, base64: 'aGVsbG8=', binario: { fileName: 'freezer.jpeg', mimeType: 'image/jpeg' }, ...extra });
@@ -38,4 +38,29 @@ test('tamanhoBase64 e inferirMime', () => {
   expect(inferirMime('', 'foto.JPG')).toBe('image/jpeg');
   expect(inferirMime('image/png', 'x.jpg')).toBe('image/png');
   expect(inferirMime('', 'sem-extensao')).toBe('');
+});
+
+describe('validarEntradaClassificacao', () => {
+  const itemClassificacao = (extra = {}) => ({ body: { arquivo_id: 'c1' }, base64: 'aGVsbG8=', binario: { fileName: 'foto.jpeg', mimeType: 'image/jpeg' }, ...extra });
+  test('imagem válida devolve a entrada sem tipo, com nome, mime e tamanho', () => {
+    const r = validarEntradaClassificacao(itemClassificacao(), RECURSOS);
+    expect(r.ok).toBe(true);
+    expect(r.entrada).toMatchObject({ arquivo_id: 'c1', nome: 'foto.jpeg', mime: 'image/jpeg', tamanho_bytes: 5 });
+    expect(r.entrada.tipo).toBeUndefined();
+  });
+  test('PDF é aceito', () => {
+    expect(validarEntradaClassificacao(itemClassificacao({ binario: { fileName: 'cartao.pdf', mimeType: 'application/pdf' } }), RECURSOS).ok).toBe(true);
+  });
+  test('vídeo é recusado com formato_invalido', () => {
+    const r = validarEntradaClassificacao(itemClassificacao({ binario: { fileName: 'tour.mp4', mimeType: 'video/mp4' } }), RECURSOS);
+    expect(r).toMatchObject({ ok: false, status: 400, erro: { codigo: 'formato_invalido' } });
+  });
+  test('sem arquivo_id ou sem arquivo devolve 400', () => {
+    expect(validarEntradaClassificacao(itemClassificacao({ body: {} }), RECURSOS).erro.codigo).toBe('arquivo_id_ausente');
+    expect(validarEntradaClassificacao(itemClassificacao({ base64: '' }), RECURSOS).erro.codigo).toBe('arquivo_ausente');
+  });
+  test('imagem acima de 8 MB devolve 413', () => {
+    const grande = 'A'.repeat(Math.ceil(((RECURSOS.limites.maxBytesImagemPdf + 3) * 4) / 3));
+    expect(validarEntradaClassificacao(itemClassificacao({ base64: grande }), RECURSOS)).toMatchObject({ ok: false, status: 413, erro: { codigo: 'arquivo_grande' } });
+  });
 });

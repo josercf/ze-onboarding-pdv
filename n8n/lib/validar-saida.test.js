@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { carregarRecursos } from '../recursos';
-import { extrairConteudo, validarObservacao, validarParecer } from './validar-saida.js';
+import { extrairConteudo, validarClassificacao, validarObservacao, validarParecer } from './validar-saida.js';
 
 const RECURSOS = carregarRecursos();
 const conteudo = {
@@ -37,5 +37,22 @@ describe('validarParecer', () => {
   });
   test('recomendação fora do enum lança erro', () => {
     expect(() => validarParecer(resposta({ ...parecer, recomendacao_sugerida: 'talvez' }), RECURSOS)).toThrow(/Parecer inválido/);
+  });
+});
+
+describe('validarClassificacao', () => {
+  const entradaClassificacao = { arquivo_id: 'c1', nome: 'foto.jpeg', mime: 'image/jpeg', inicio_ms: Date.now() - 50 };
+  const classificacao = { tipo_detectado: 'fachada', confianca: 1.3, motivo: 'Frente de loja.' };
+  test('devolve tipo, confiança limitada a 1, motivo e metadados', () => {
+    const r = validarClassificacao(resposta(classificacao), entradaClassificacao, RECURSOS);
+    expect(r).toMatchObject({ arquivo_id: 'c1', nome: 'foto.jpeg', mime: 'image/jpeg', tipo_detectado: 'fachada', confianca: 1, motivo: 'Frente de loja.', modelo: 'google/gemini-2.5-flash', tokens: { entrada: 1200, saida: 90 } });
+    expect(r.latencia_ms).toBeGreaterThanOrEqual(50);
+  });
+  test('indefinido é aceito', () => {
+    expect(validarClassificacao(resposta({ ...classificacao, tipo_detectado: 'indefinido', confianca: 0.2 }), entradaClassificacao, RECURSOS).tipo_detectado).toBe('indefinido');
+  });
+  test('tipo fora do enum ou confiança não numérica lançam', () => {
+    expect(() => validarClassificacao(resposta({ ...classificacao, tipo_detectado: 'geladeira' }), entradaClassificacao, RECURSOS)).toThrow(/Classificação inválida/);
+    expect(() => validarClassificacao(resposta({ ...classificacao, confianca: 'alta' }), entradaClassificacao, RECURSOS)).toThrow(/Classificação inválida/);
   });
 });

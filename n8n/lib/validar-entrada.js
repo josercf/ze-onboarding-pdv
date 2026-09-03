@@ -31,3 +31,19 @@ export function validarEntrada(item, RECURSOS) {
   if (tamanho > limite) return erro(413, 'arquivo_grande', `Arquivo com ${tamanho} bytes; o limite é ${limite}`);
   return { ok: true, entrada: { tipo, arquivo_id: body.arquivo_id, contexto, nome, mime, base64: item.base64, tamanho_bytes: tamanho, inicio_ms: Date.now() } };
 }
+
+const FORMATOS_CLASSIFICAVEIS = ['image/jpeg', 'image/png', 'application/pdf'];
+
+export function validarEntradaClassificacao(item, RECURSOS) {
+  const body = (item && item.body) || {};
+  const erro = (status, codigo, mensagem) => ({ ok: false, status, erro: { codigo, mensagem } });
+  if (!body.arquivo_id) return erro(400, 'arquivo_id_ausente', 'Informe o campo arquivo_id');
+  if (!item.base64) return erro(400, 'arquivo_ausente', 'Envie o arquivo no campo "arquivo"');
+  const nome = (item.binario && item.binario.fileName) || 'arquivo';
+  const mime = inferirMime(item.binario && item.binario.mimeType, nome);
+  if (!FORMATOS_CLASSIFICAVEIS.includes(mime)) return erro(400, 'formato_invalido', `Formato ${mime || 'desconhecido'} não passa por classificação; envie JPEG, PNG ou PDF`);
+  const tamanho = tamanhoBase64(item.base64);
+  const limite = RECURSOS.limites.maxBytesImagemPdf;
+  if (tamanho > limite) return erro(413, 'arquivo_grande', `Arquivo com ${tamanho} bytes; o limite é ${limite}`);
+  return { ok: true, entrada: { arquivo_id: body.arquivo_id, nome, mime, base64: item.base64, tamanho_bytes: tamanho, inicio_ms: Date.now() } };
+}

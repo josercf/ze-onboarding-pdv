@@ -10,7 +10,7 @@ export function extrairConteudo(resposta) {
   try { return JSON.parse(texto); } catch { throw new Error('Conteúdo do modelo não é JSON válido'); }
 }
 
-function tokensDe(resposta) {
+export function tokensDe(resposta) {
   const usage = (resposta && resposta.usage) || {};
   return { entrada: usage.prompt_tokens || 0, saida: usage.completion_tokens || 0 };
 }
@@ -44,4 +44,18 @@ export function validarParecer(resposta, RECURSOS) {
     throw new Error('Parecer inválido: campos obrigatórios ausentes ou fora do enum');
   }
   return { parecer: c.parecer, pontos_de_atencao: c.pontos_de_atencao, recomendacao_sugerida: c.recomendacao_sugerida, justificativa: c.justificativa, modelo: resposta.model || RECURSOS.modelos.parecer, tokens: tokensDe(resposta) };
+}
+
+export function validarClassificacao(resposta, entrada, RECURSOS) {
+  const c = extrairConteudo(resposta);
+  const tiposValidos = [...Object.keys(RECURSOS.tipos), 'indefinido'];
+  if (!tiposValidos.includes(c.tipo_detectado) || typeof c.confianca !== 'number' || typeof c.motivo !== 'string') {
+    throw new Error('Classificação inválida: campos obrigatórios ausentes ou fora do enum');
+  }
+  return {
+    arquivo_id: entrada.arquivo_id, nome: entrada.nome, mime: entrada.mime,
+    tipo_detectado: c.tipo_detectado, confianca: Math.min(1, Math.max(0, c.confianca)), motivo: c.motivo,
+    modelo: resposta.model || RECURSOS.modelos.classificacao, tokens: tokensDe(resposta),
+    latencia_ms: Math.max(0, Date.now() - (entrada.inicio_ms || Date.now())),
+  };
 }

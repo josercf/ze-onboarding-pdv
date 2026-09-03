@@ -23,3 +23,22 @@ export function montarRequisicao(entrada, RECURSOS) {
   if (mime === 'application/pdf') body.plugins = [{ id: 'file-parser', pdf: { engine: 'native' } }];
   return { url: 'https://openrouter.ai/api/v1/chat/completions', body };
 }
+
+export function montarRequisicaoClassificacao(entrada, RECURSOS) {
+  const { nome, mime, base64 } = entrada;
+  const dataUrl = `data:${mime};base64,${base64}`;
+  const parte = mime === 'application/pdf'
+    ? { type: 'file', file: { filename: nome, file_data: dataUrl } }
+    : { type: 'image_url', image_url: { url: dataUrl } };
+  const body = {
+    model: RECURSOS.modelos.classificacao,
+    messages: [
+      { role: 'system', content: RECURSOS.prompts.system },
+      { role: 'user', content: [{ type: 'text', text: RECURSOS.prompts.classificar }, parte] },
+    ],
+    response_format: { type: 'json_schema', json_schema: { name: 'classificacao_anexo', strict: true, schema: RECURSOS.schemas.classificacao } },
+    provider: { require_parameters: true, data_collection: 'deny' },
+  };
+  if (mime === 'application/pdf') body.plugins = [{ id: 'file-parser', pdf: { engine: 'native' } }];
+  return { url: 'https://openrouter.ai/api/v1/chat/completions', body };
+}
