@@ -45,7 +45,7 @@
       "id": "responder-200-classificacao", "name": "responder 200", "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.1, "position": [1420, -320]
     },
     {
-      "parameters": { "respondWith": "json", "responseBody": "={{ JSON.stringify({ erro: { codigo: 'classificacao_falhou', mensagem: ($json.error && $json.error.message) || $json.message || 'Falha na classificacao' } }) }}", "options": { "responseCode": 500 } },
+      "parameters": { "respondWith": "json", "responseBody": "={{ JSON.stringify({ erro: { codigo: 'classificacao_falhou', mensagem: ($json.error && $json.error.message) || $json.message || 'Falha na classificação' } }) }}", "options": { "responseCode": 500 } },
       "id": "responder-500-classificacao", "name": "responder 500", "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.1, "position": [1420, -80]
     }
   ],

@@ -213,7 +213,7 @@
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ erro: { codigo: 'classificacao_falhou', mensagem: ($json.error && $json.error.message) || $json.message || 'Falha na classificacao' } }) }}",
+        "responseBody": "={{ JSON.stringify({ erro: { codigo: 'classificacao_falhou', mensagem: ($json.error && $json.error.message) || $json.message || 'Falha na classificação' } }) }}",
         "options": {
           "responseCode": 500
         }

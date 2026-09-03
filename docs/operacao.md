@@ -17,7 +17,7 @@ Nunca editar código de nó na interface: o teste de sincronia falha e a mudanç
 ## Workflows
 | Workflow | Caminho | O que faz | Modelo | Timeout do OpenRouter |
 |---|---|---|---|---|
-| `classificar-arquivo` | `POST /webhook/classificar-arquivo` (multipart `arquivo`, `arquivo_id`) | Identifica o tipo de documento de uma imagem ou PDF e devolve `tipo_detectado`, `confianca` e `motivo`. Vídeo não passa aqui. | `google/gemini-2.5-flash` (no `Config`, campo `modelo_classificacao`) | 40 s |
+| `classificar-arquivo` | `POST /webhook/classificar-arquivo` (multipart `arquivo`, `arquivo_id`) | Identifica o tipo de documento de uma imagem ou PDF e devolve `tipo_detectado`, `confianca` e `motivo`. Vídeo não passa aqui. | `google/gemini-2.5-flash` (nó `Config`, campo `modelo_classificacao`) | 40 s |
 | `analisar-arquivo` | `POST /webhook/analisar-arquivo` (multipart `arquivo`, `tipo`, `arquivo_id`, `contexto`) | Extrai a observação estruturada do arquivo conforme o tipo. | `google/gemini-2.5-flash` (`modelo_analise`) | 80 s |
 | `consolidar` | `POST /webhook/consolidar` (JSON) | Gera o parecer a partir do formulário, da Receita, das observações e das 16 verificações. | `google/gemini-2.5-pro` (`modelo_parecer`) | 80 s |
 
