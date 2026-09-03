@@ -4,6 +4,7 @@ import { TIPOS_CONFIG } from '@shared/config/index';
 import type { ClienteN8n } from '../api/clienteN8n';
 import { formatarCnpj } from '../cnpj/validarCnpj';
 import { observacoesDoEstado, type Acao, type EstadoApp } from '../fluxo/estadoApp';
+import type { TipoDetectado } from '../tipos';
 import { Botoes } from './componentes';
 import { estimarCusto } from './custo';
 import { ROTULO_RECOMENDACAO, ROTULO_STATUS } from './rotulos';
@@ -14,6 +15,14 @@ const segundosDe = (ref: string): number | null => {
   const m = /^t=(\d{2}):(\d{2})$/.exec(ref);
   return m ? Number(m[1]) * 60 + Number(m[2]) : null;
 };
+
+const rotuloDetectado = (t: TipoDetectado) => (t === 'indefinido' ? 'indefinido' : TIPOS_CONFIG[t].rotulo);
+
+function notaClassificacao(a: { tipo: TipoDetectado | null; classificacao: { tipoDetectado: TipoDetectado | null } }): string {
+  const d = a.classificacao.tipoDetectado;
+  if (!d || !a.tipo) return '';
+  return d === a.tipo ? ' (detectado automaticamente)' : ` (detectado como ${rotuloDetectado(d)}, reclassificado)`;
+}
 
 export function EtapaRelatorio({ estado, despachar, cliente, agora = () => new Date() }: Props) {
   const pediu = useRef(false);
@@ -43,7 +52,7 @@ export function EtapaRelatorio({ estado, despachar, cliente, agora = () => new D
   }, []);
 
   function baixarJson() {
-    const conteudo = { gerado_em: geradoEm.toISOString(), formulario: estado.formulario, receita: estado.receita, parametros_regiao: estado.parametros, verificacoes: estado.verificacoes, recomendacao, parecer: estado.parecer, observacoes };
+    const conteudo = { gerado_em: geradoEm.toISOString(), formulario: estado.formulario, receita: estado.receita, parametros_regiao: estado.parametros, verificacoes: estado.verificacoes, recomendacao, parecer: estado.parecer, observacoes, anexos: estado.anexos.map((a) => ({ arquivo_id: a.arquivoId, nome: a.nome, tipo: a.tipo, tipo_detectado: a.classificacao.tipoDetectado, confianca: a.classificacao.confianca })) };
     const url = URL.createObjectURL(new Blob([JSON.stringify(conteudo, null, 2)], { type: 'application/json' }));
     const a = document.createElement('a');
     a.href = url; a.download = `relatorio-${estado.formulario.cnpj}.json`; a.click();
@@ -52,6 +61,8 @@ export function EtapaRelatorio({ estado, despachar, cliente, agora = () => new D
 
   const custo = estimarCusto([...observacoes, ...(estado.parecer ? [estado.parecer] : [])]);
   const discorda = estado.parecer && estado.parecer.recomendacao_sugerida !== recomendacao;
+  const classificados = estado.anexos.filter((a) => a.classificacao.estado === 'concluida' && a.mime !== 'video/mp4');
+  const aceitos = classificados.filter((a) => a.classificacao.tipoDetectado === a.tipo).length;
 
   return (
     <section className="relatorio" aria-labelledby="t-relatorio">
@@ -85,7 +96,7 @@ export function EtapaRelatorio({ estado, despachar, cliente, agora = () => new D
                 ? <video controls preload="metadata" src={urls[a.arquivoId]} ref={(el) => { videos.current[a.arquivoId] = el; }} />
                 : a.mime.startsWith('image/') ? <img src={urls[a.arquivoId]} alt={`Miniatura de ${a.nome}`} /> : <span className="icone">PDF</span>}
               <div>
-                <strong>{a.nome}</strong> <small>{a.tipo ? TIPOS_CONFIG[a.tipo].rotulo : ''}{!o.aderente_ao_tipo && ' (não corresponde ao tipo)'}</small>
+                <strong>{a.nome}</strong> <small>{a.tipo ? TIPOS_CONFIG[a.tipo].rotulo : ''}{notaClassificacao(a)}{!o.aderente_ao_tipo && ' (não corresponde ao tipo)'}</small>
                 <p>{o.resumo}</p>
                 {o.alertas.length > 0 && <ul className="alertas">{o.alertas.map((al, i) => <li key={i}>{al.descricao}</li>)}</ul>}
                 <ul className="lista-evidencias">
@@ -123,6 +134,7 @@ export function EtapaRelatorio({ estado, despachar, cliente, agora = () => new D
 
       <footer className="rodape">
         <small>Modelos: {custo.modelos.join(', ') || 'nenhum'} · Tokens: {custo.tokens.entrada.toLocaleString('pt-BR')} de entrada, {custo.tokens.saida.toLocaleString('pt-BR')} de saída · Custo estimado: US$ {custo.totalUsd.toFixed(3)}</small>
+        <br /><small>Classificação automática: {aceitos} de {classificados.length} arquivos aceitos sem correção</small>
       </footer>
 
       <Botoes>

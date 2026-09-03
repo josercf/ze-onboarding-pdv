@@ -71,4 +71,21 @@ describe('EtapaRelatorio', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Nova análise' }));
     expect(screen.getByTestId('etapa')).toHaveTextContent('1');
   });
+
+  test('mostra o tipo detectado por arquivo e destaca reclassificações', async () => {
+    const entrada = ok();
+    const estado = estadoDe(entrada);
+    estado.anexos[0].classificacao = { estado: 'concluida', tipoDetectado: 'refrigerador', confianca: 0.8, motivo: 'teste' };
+    const video = estado.anexos.find((a) => a.tipo === 'video_geral')!;
+    video.classificacao = { estado: 'concluida', tipoDetectado: 'video_geral', confianca: 1, motivo: 'Vídeo MP4 só pode ser vídeo geral' };
+    function HarnessFixo({ cliente }: { cliente: ClienteN8n }) {
+      const [e, despachar] = useReducer(reduzir, undefined, () => estado);
+      return <EtapaRelatorio estado={e} despachar={despachar} cliente={cliente} agora={() => new Date('2026-09-02T15:04:00')} />;
+    }
+    render(<HarnessFixo cliente={clienteCom(vi.fn(async () => parecer))} />);
+    expect(await screen.findByText('Material consistente com o declarado.')).toBeInTheDocument();
+    expect(screen.getByText(/\(detectado como Refrigerador, reclassificado\)/)).toBeInTheDocument();
+    expect(screen.getAllByText(/\(detectado automaticamente\)/)).toHaveLength(estado.anexos.length - 1);
+    expect(screen.getByText(/Classificação automática: 7 de 8 arquivos aceitos sem correção/)).toBeInTheDocument();
+  });
 });
