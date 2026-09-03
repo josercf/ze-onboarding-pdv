@@ -11,8 +11,13 @@ describe('configuração compartilhada', () => {
   test('formatos permitidos por tipo estão na lista global', () => {
     for (const cfg of Object.values(TIPOS_CONFIG)) for (const f of cfg.formatos) expect(FORMATOS).toContain(f);
   });
-  test('limites conforme a spec', () => {
-    expect(limites).toMatchObject({ maxBytesVideo: 11534336, maxBytesImagemPdf: 8388608, concorrencia: 2, timeoutFetchMs: 95000, esperaRetryMs: 3000, duracaoMinimaVideoS: 10, diasValidadeDocumento: 90 });
+  test('limites conforme a spec, incluindo o limiar da classificação', () => {
+    expect(limites).toMatchObject({ maxBytesVideo: 11534336, maxBytesImagemPdf: 8388608, concorrencia: 2, timeoutFetchMs: 95000, esperaRetryMs: 3000, duracaoMinimaVideoS: 10, diasValidadeDocumento: 90, confiancaMinimaClassificacao: 0.6 });
+  });
+  test('tipos condicionais não são sempre obrigatórios', () => {
+    expect(TIPOS_CONFIG.camara_fria.obrigatorio).toBe(false);
+    expect(TIPOS_CONFIG.equipamentos.obrigatorio).toBe(false);
+    expect(TIPOS_CONFIG.fachada.obrigatorio).toBe(true);
   });
   test('itens críticos e obrigatórios estão entre 1 e 16', () => {
     for (const n of [...verificacoes.criticos, ...verificacoes.obrigatorios]) expect(n).toBeGreaterThanOrEqual(1), expect(n).toBeLessThanOrEqual(16);
@@ -24,5 +29,6 @@ describe('configuração compartilhada', () => {
     expect(regiaoDefault).toEqual({ minRefrigeradores: 4, camaraFriaObrigatoria: false, minEntregadores: 1 });
     expect(modelos.analise).toBe('google/gemini-2.5-flash');
     expect(modelos.parecer).toBe('google/gemini-2.5-pro');
+    expect(modelos.classificacao).toBe('google/gemini-2.5-flash');
   });
 });

@@ -15,8 +15,21 @@ describe('completude e qualidade (16)', () => {
     expect(v.status).toBe('atencao');
     expect(v.observado).toMatch(/faltam: NF Ambev/);
   });
-  test('câmara fria não é obrigatória', () => {
-    const e = ok(); e.observacoes = e.observacoes.filter((o) => o.tipo !== 'camara_fria'); e.anexosEnviados = e.anexosEnviados.filter((a) => a.tipo !== 'camara_fria');
+  test('câmara fria declarada "não" não é obrigatória', () => {
+    const e = ok(); e.formulario = { ...e.formulario, camaraFria: 'nao' };
+    e.observacoes = e.observacoes.filter((o) => o.tipo !== 'camara_fria'); e.anexosEnviados = e.anexosEnviados.filter((a) => a.tipo !== 'camara_fria');
+    expect(verificarAnexos(e).status).toBe('conforme');
+  });
+  test('câmara fria declarada "sim" sem anexo vira atenção', () => {
+    const e = ok();
+    e.observacoes = e.observacoes.filter((o) => o.tipo !== 'camara_fria'); e.anexosEnviados = e.anexosEnviados.filter((a) => a.tipo !== 'camara_fria');
+    const v = verificarAnexos(e);
+    expect(v.status).toBe('atencao');
+    expect(v.observado).toMatch(/faltam: Câmara fria/);
+  });
+  test('balcão e equipamentos só é obrigatório com computador ou impressora declarados', () => {
+    const e = ok(); e.formulario = { ...e.formulario, computadorInternet: 'nao', impressoraTermica: 'nao' };
+    e.observacoes = e.observacoes.filter((o) => o.tipo !== 'equipamentos'); e.anexosEnviados = e.anexosEnviados.filter((a) => a.tipo !== 'equipamentos');
     expect(verificarAnexos(e).status).toBe('conforme');
   });
   test('arquivo com falha de análise e vídeo curto viram atenção', () => {

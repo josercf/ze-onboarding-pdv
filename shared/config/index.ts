@@ -10,3 +10,4 @@ export interface ConfigTipo { rotulo: string; formatos: string[]; obrigatorio: b
 
 export const TIPOS_CONFIG = tipos as Record<TipoAnexo, ConfigTipo>;
 export { limites, cnaes, verificacoes, regiaoDefault, modelos };
+export { tiposObrigatorios, type DeclaracoesDoFormulario } from './obrigatorios';

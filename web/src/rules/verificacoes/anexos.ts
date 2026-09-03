@@ -1,9 +1,9 @@
-import { TIPOS_CONFIG, limites } from '@shared/config/index';
-import type { DadosVideoGeral, TipoAnexo, Verificacao } from '../../tipos';
+import { TIPOS_CONFIG, limites, tiposObrigatorios } from '@shared/config/index';
+import type { DadosVideoGeral, Verificacao } from '../../tipos';
 import { montar, observacoesDe, type EntradaMotor } from '../base';
 
 export function verificarAnexos(e: EntradaMotor): Verificacao {
-  const obrigatorios = (Object.keys(TIPOS_CONFIG) as TipoAnexo[]).filter((t) => TIPOS_CONFIG[t].obrigatorio);
+  const obrigatorios = tiposObrigatorios(e.formulario);
   const presentes = new Set(e.observacoes.map((o) => o.tipo));
   const problemas: string[] = [];
 
