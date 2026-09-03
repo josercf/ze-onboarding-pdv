@@ -1,6 +1,6 @@
 # ze-onboarding-pdv
 
-Validação de onboarding de novos pontos de venda (PDV) com análise de fotos, vídeos e documentos por IA e geração de relatório de conformidade.
+Validação de onboarding de novos pontos de venda (PDV) com análise de fotos, vídeos e documentos por IA e geração de relatório de conformidade, com classificação automática dos anexos pelo modelo antes da análise.
 
 Estado atual: versão inicial implementada (frontend, motor de regras e workflows n8n prontos; workflow de deploy no GitHub Pages configurado em `.github/workflows/deploy.yml`). O documento de design está em `docs/superpowers/specs/2026-09-02-onboarding-pdv-design.md` e as decisões arquiteturais em `docs/adrs/`.
 
@@ -20,7 +20,7 @@ A publicação em `https://josercf.github.io/ze-onboarding-pdv/` depende do merg
 | `pnpm test` | Roda os testes da raiz (Vitest) e de `web/` |
 | `pnpm -C web dev` | Sobe o frontend localmente |
 | `pnpm build:n8n` | Gera `n8n/workflows/*.json` a partir de `n8n/lib`, `n8n/prompts` e `shared/schemas` |
-| `pnpm smoke` | Chama os dois webhooks publicados e valida as respostas contra os schemas (requer `.env` com `N8N_BASE_URL` e `N8N_TOKEN`) |
+| `pnpm smoke` | Chama os três webhooks publicados (classificar, analisar e consolidar) e valida as respostas contra os schemas (requer `.env` com `N8N_BASE_URL` e `N8N_TOKEN`) |
 
 ## Estrutura
 
