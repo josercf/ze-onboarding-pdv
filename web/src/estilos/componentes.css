@@ -1,0 +1,81 @@
+.app { max-width: var(--largura-app); margin: 0 auto; padding: var(--espaco-5) var(--espaco-4); }
+
+.etapas { display: flex; gap: var(--espaco-2); padding: 0; list-style: none; flex-wrap: wrap; margin: 0 0 var(--espaco-5); }
+.etapas li { padding: var(--espaco-1) var(--espaco-3); border: 1px solid var(--cor-borda); border-radius: var(--raio-3); font-size: var(--fonte-2); background: var(--cor-superficie); }
+.etapas li[aria-current="step"] { background: var(--cor-primaria); color: #fff; border-color: var(--cor-primaria); }
+
+.secao { border: 1px solid var(--cor-borda); border-radius: var(--raio-2); background: var(--cor-superficie); box-shadow: var(--sombra-1); padding: var(--espaco-4); margin: 0 0 var(--espaco-5); }
+.secao > legend { font-size: var(--fonte-4); font-weight: 600; padding: 0 var(--espaco-2); }
+.secao .descricao { color: var(--cor-texto-fraco); font-size: var(--fonte-2); }
+.grade { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--espaco-3) var(--espaco-4); }
+
+.campo { display: flex; flex-direction: column; gap: var(--espaco-1); grid-column: span 6; }
+.campo-curto { grid-column: span 2; }
+.campo-medio { grid-column: span 3; }
+.campo-longo { grid-column: span 6; }
+.campo label { font-size: var(--fonte-2); font-weight: 600; }
+.campo input, .campo select, .campo textarea { padding: var(--espaco-2); border: 1px solid var(--cor-borda); border-radius: var(--raio-1); background: var(--cor-superficie); }
+.campo small { color: var(--cor-texto-fraco); font-size: var(--fonte-1); }
+
+.cartao { border: 1px solid var(--cor-borda); border-radius: var(--raio-2); padding: var(--espaco-3) var(--espaco-4); background: var(--cor-primaria-clara); display: grid; grid-template-columns: max-content 1fr; gap: var(--espaco-1) var(--espaco-4); grid-column: span 6; }
+.cartao dt { color: var(--cor-texto-fraco); font-size: var(--fonte-2); }
+.cartao dd { margin: 0; }
+
+.zona { border: 2px dashed var(--cor-borda); border-radius: var(--raio-2); padding: var(--espaco-4); text-align: center; background: var(--cor-superficie); }
+
+.anexos, .fila, .evidencias { list-style: none; padding: 0; margin: var(--espaco-4) 0; display: grid; gap: var(--espaco-2); }
+.anexos li, .fila li, .evidencias li { display: flex; gap: var(--espaco-3); align-items: flex-start; padding: var(--espaco-3); border: 1px solid var(--cor-borda); border-radius: var(--raio-2); background: var(--cor-superficie); }
+.anexos img, .evidencias img { width: 64px; height: 64px; object-fit: cover; border-radius: var(--raio-1); }
+.evidencias video { width: 220px; max-width: 100%; }
+.detalhes { flex: 1; display: flex; flex-direction: column; gap: var(--espaco-1); min-width: 0; }
+.icone { font-size: var(--fonte-1); color: var(--cor-texto-fraco); }
+
+.selo { font-size: var(--fonte-2); color: var(--cor-texto-fraco); }
+.classificacao-classificando .selo, .classificacao-pendente .selo { color: var(--cor-primaria); }
+.classificacao-falhou .selo { color: var(--cor-atencao); }
+.motivo { color: var(--cor-texto-fraco); font-size: var(--fonte-2); }
+.motivo-bloqueio { color: var(--cor-texto-fraco); align-self: center; }
+
+.erros, .erro, [role="alert"] { color: var(--cor-divergente); }
+.erros { list-style: none; padding: 0; margin: 0 0 var(--espaco-3); }
+.aviso { color: var(--cor-atencao); }
+
+.botoes { display: flex; gap: var(--espaco-3); margin: var(--espaco-5) 0 0; flex-wrap: wrap; align-items: center; }
+button { padding: var(--espaco-2) var(--espaco-4); border-radius: var(--raio-1); border: 1px solid var(--cor-primaria); background: var(--cor-primaria); color: #fff; cursor: pointer; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+.botoes button[type="button"]:not(:last-of-type) { background: var(--cor-superficie); color: var(--cor-primaria); }
+
+progress { width: 100%; height: var(--espaco-3); }
+
+.tabela { overflow-x: auto; }
+.badge { padding: 0 var(--espaco-2); border-radius: var(--raio-3); color: #fff; white-space: nowrap; font-size: var(--fonte-2); border: 1px solid transparent; }
+.badge.conforme { background: var(--cor-conforme); }
+.badge.divergente { background: var(--cor-divergente); }
+.badge.atencao { background: var(--cor-atencao); }
+.badge.nao_verificavel { background: var(--cor-neutra); }
+
+.recomendacao { font-size: var(--fonte-4); font-weight: 600; padding: var(--espaco-2) var(--espaco-4); border-radius: var(--raio-2); display: inline-block; color: #fff; }
+.recomendacao.apto { background: var(--cor-conforme); }
+.recomendacao.nao_apto { background: var(--cor-divergente); }
+.recomendacao.revisao_manual { background: var(--cor-atencao); }
+
+.etapa-anexos { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: var(--espaco-5); align-items: start; }
+.coluna-arquivos { min-width: 0; }
+.oculto-visual { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+
+.painel-docs { border: 1px solid var(--cor-borda); border-radius: var(--raio-2); background: var(--cor-superficie); box-shadow: var(--sombra-1); padding: var(--espaco-3); position: sticky; top: var(--espaco-4); }
+.painel-docs summary { cursor: pointer; font-weight: 600; font-size: var(--fonte-2); }
+.painel-docs ul { list-style: none; padding: 0; margin: var(--espaco-2) 0 0; }
+.painel-docs li button { width: 100%; display: grid; grid-template-columns: 1fr auto; column-gap: var(--espaco-2); text-align: left; background: none; color: var(--cor-texto); border: 0; border-bottom: 1px solid var(--cor-borda); border-radius: 0; padding: var(--espaco-2) 0; }
+.painel-docs li button small { grid-column: 1; color: var(--cor-texto-fraco); font-size: var(--fonte-1); }
+.painel-docs li button .situacao { grid-column: 2; grid-row: 1 / span 2; align-self: center; font-weight: 600; font-size: var(--fonte-2); }
+.painel-docs .ok .situacao { color: var(--cor-conforme); }
+.painel-docs .falta .situacao { color: var(--cor-atencao); }
+
+@media (max-width: 720px) {
+  .etapa-anexos { grid-template-columns: 1fr; }
+  .coluna-painel { order: -1; }
+  .painel-docs { position: static; }
+  .grade { grid-template-columns: 1fr; }
+  .campo, .campo-curto, .campo-medio, .campo-longo, .cartao { grid-column: auto; }
+}

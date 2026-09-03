@@ -1,0 +1,25 @@
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: var(--fonte-3);
+  line-height: 1.5;
+  color: var(--cor-texto);
+  background: var(--cor-fundo);
+}
+
+h1 { font-size: var(--fonte-6); line-height: 1.2; margin: 0 0 var(--espaco-2); }
+h2 { font-size: var(--fonte-5); line-height: 1.25; margin: 0 0 var(--espaco-3); }
+h3 { font-size: var(--fonte-4); line-height: 1.3; margin: 0 0 var(--espaco-2); }
+p { margin: 0 0 var(--espaco-3); }
+
+a { color: var(--cor-primaria); }
+
+input, select, textarea, button { font: inherit; }
+
+:focus-visible { outline: 2px solid var(--cor-primaria); outline-offset: 2px; box-shadow: var(--foco); border-radius: var(--raio-1); }
+
+table { border-collapse: collapse; width: 100%; font-size: var(--fonte-2); }
+th, td { text-align: left; padding: var(--espaco-2); border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+th { color: var(--cor-texto-fraco); font-weight: 600; }

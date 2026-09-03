@@ -1,0 +1,5 @@
+@media print {
+  .botoes, .etapas, .zona, button, .introducao, .painel-docs { display: none !important; }
+  .app { max-width: none; padding: 0; }
+  .evidencias video { display: none; }
+}
