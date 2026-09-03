@@ -13,10 +13,10 @@
 .grade > .campo, .grade > .cartao { margin: 0; }
 .campo-curto { grid-column: span 2; }
 .campo-medio { grid-column: span 3; }
-.campo-largo { grid-column: span 4; }
-.campo-longo { grid-column: span 6; }
 .campo-checkbox { flex-direction: row; align-items: center; gap: var(--espaco-2); }
 .campo-checkbox input { width: auto; }
+.campo-largo { grid-column: span 4; }
+.campo-longo { grid-column: span 6; }
 .campo label { font-size: var(--fonte-2); font-weight: 600; }
 .campo input, .campo select, .campo textarea { padding: var(--espaco-2); border: 1px solid var(--cor-borda); border-radius: var(--raio-1); background: var(--cor-superficie); }
 .campo small { color: var(--cor-texto-fraco); font-size: var(--fonte-1); }
@@ -81,5 +81,5 @@ progress { width: 100%; height: var(--espaco-3); }
   .coluna-painel { order: -1; }
   .painel-docs { position: static; }
   .grade { grid-template-columns: 1fr; }
-  .campo, .campo-curto, .campo-medio, .campo-longo, .cartao { grid-column: auto; }
+  .campo, .campo-curto, .campo-medio, .campo-largo, .campo-longo, .cartao { grid-column: auto; }
 }
