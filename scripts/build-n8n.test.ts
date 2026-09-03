@@ -1,4 +1,5 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { construirTodos, gerarCodigoNo, gerarWorkflow } from './build-n8n';
@@ -40,7 +41,14 @@ describe('workflows versionados', () => {
       expect(readFileSync(caminho, 'utf8'), `${caminho} desatualizado; rode pnpm build:n8n`).toBe(esperado);
     }
   });
-  test('construirTodos devolve os nomes gerados', () => {
-    expect(construirTodos().sort()).toEqual(['analisar-arquivo', 'consolidar']);
+  test('construirTodos devolve os nomes gerados e escreve na pasta de saída informada, sem tocar n8n/workflows', () => {
+    const dirSaida = mkdtempSync(join(tmpdir(), 'build-n8n-'));
+    const nomes = construirTodos('n8n/templates', dirSaida);
+    expect(nomes.sort()).toEqual(['analisar-arquivo', 'consolidar']);
+    for (const nome of nomes) {
+      const caminho = join(dirSaida, `${nome}.json`);
+      expect(existsSync(caminho)).toBe(true);
+      expect(readFileSync(caminho, 'utf8')).toBe(readFileSync(join('n8n/workflows', `${nome}.json`), 'utf8'));
+    }
   });
 });
