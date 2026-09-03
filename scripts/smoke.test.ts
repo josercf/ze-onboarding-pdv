@@ -1,7 +1,7 @@
 import Ajv from 'ajv';
 import { describe, expect, test, vi } from 'vitest';
 import {
-  CODIGO_FALHA_REDE, CODIGO_OBSERVACAO_INVALIDA, CODIGO_PARECER_INVALIDO,
+  CODIGO_FALHA_REDE, CODIGO_HTTP_NAO_OK, CODIGO_OBSERVACAO_INVALIDA, CODIGO_PARECER_INVALIDO,
   ErroSmoke, PNG, chamar, lerConfig, montarFormDataAnalise, montarPayloadConsolidar, rodarSmoke, validarObservacao, validarParecer,
 } from './smoke';
 
@@ -90,6 +90,33 @@ describe('chamar', () => {
     const promessa = chamar(fetchFn as unknown as typeof fetch, { base: 'https://n8n.exemplo.com', token: 'tok' }, 'consolidar', { method: 'POST' }, CODIGO_PARECER_INVALIDO, log);
     await expect(promessa).rejects.toThrow(ErroSmoke);
     expect(log).toHaveBeenCalledWith(expect.stringMatching(/^consolidar: HTTP 401 em \d+ ms$/));
+  });
+
+  test('resposta não ok com corpo maior que 300 caracteres trunca a mensagem em 300 caracteres', async () => {
+    const log = vi.fn();
+    const corpoLongo = 'erro interno '.repeat(30);
+    const fetchFn = vi.fn(async () => new Response(corpoLongo, { status: 500 }));
+    try {
+      await chamar(fetchFn as unknown as typeof fetch, { base: 'https://n8n.exemplo.com', token: 'tok' }, 'analisar-arquivo', { method: 'POST' }, CODIGO_OBSERVACAO_INVALIDA, log);
+      throw new Error('deveria ter lançado');
+    } catch (e) {
+      expect((e as ErroSmoke).codigo).toBe(CODIGO_HTTP_NAO_OK);
+      expect((e as ErroSmoke).message).toBe(corpoLongo.slice(0, 300));
+      expect((e as ErroSmoke).message).toHaveLength(300);
+    }
+  });
+
+  test('resposta não ok com corpo HTML substitui a mensagem por aviso de página de erro do proxy', async () => {
+    const log = vi.fn();
+    const corpoHtml = '<html><head><title>502 Bad Gateway</title></head><body>cloudflare</body></html>';
+    const fetchFn = vi.fn(async () => new Response(corpoHtml, { status: 502 }));
+    try {
+      await chamar(fetchFn as unknown as typeof fetch, { base: 'https://n8n.exemplo.com', token: 'tok' }, 'analisar-arquivo', { method: 'POST' }, CODIGO_OBSERVACAO_INVALIDA, log);
+      throw new Error('deveria ter lançado');
+    } catch (e) {
+      expect((e as ErroSmoke).codigo).toBe(CODIGO_HTTP_NAO_OK);
+      expect((e as ErroSmoke).message).toBe('corpo HTML (provavelmente página de erro do proxy)');
+    }
   });
 
   test('fetchFn rejeitando (falha de rede) não loga nada e lança ErroSmoke com o código de falha de rede e a URL na mensagem', async () => {

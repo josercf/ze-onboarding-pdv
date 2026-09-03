@@ -72,6 +72,17 @@ export function montarPayloadConsolidar(exemplo: typeof exemploOk = exemploOk) {
 }
 
 /**
+ * Formata o corpo de uma resposta HTTP não-2xx para a mensagem de erro: trunca em 300 caracteres
+ * e, se o corpo começar com `<` (provável página HTML de erro de um proxy, como as respostas 502 e
+ * 504 que o Cloudflare do n8n Cloud substitui pela própria página de erro), troca por um aviso
+ * curto em vez do HTML bruto.
+ */
+function formatarCorpoErro(texto: string): string {
+  if (texto.trimStart().startsWith('<')) return 'corpo HTML (provavelmente página de erro do proxy)';
+  return texto.slice(0, 300);
+}
+
+/**
  * Chama um webhook e devolve o corpo já parseado como JSON. `codigoCorpoInvalido` é o código de
  * saída usado quando a resposta é 2xx mas o corpo não é JSON válido (3 para analisar-arquivo, 4
  * para consolidar na chamada de rodarSmoke) - falha de rede (sem resposta) sempre usa
@@ -94,7 +105,7 @@ export async function chamar(
   }
   const texto = await resposta.text();
   log(`${caminho}: HTTP ${resposta.status} em ${Date.now() - inicio} ms`);
-  if (!resposta.ok) throw new ErroSmoke(CODIGO_HTTP_NAO_OK, texto);
+  if (!resposta.ok) throw new ErroSmoke(CODIGO_HTTP_NAO_OK, formatarCorpoErro(texto));
   try {
     return JSON.parse(texto);
   } catch {
