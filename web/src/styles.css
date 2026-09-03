@@ -43,6 +43,11 @@ th, td { text-align: left; padding: 0.4rem; border-bottom: 1px solid var(--cor-b
 .badge.atencao { background: var(--cor-atencao); } .badge.nao_verificavel { background: var(--cor-neutra); }
 .recomendacao { font-size: 1.2rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 8px; display: inline-block; color: #fff; }
 .recomendacao.apto { background: var(--cor-conforme); } .recomendacao.nao_apto { background: var(--cor-divergente); } .recomendacao.revisao_manual { background: var(--cor-atencao); }
+.selo { font-size: 0.85rem; color: var(--cor-neutra); }
+.classificacao-classificando .selo, .classificacao-pendente .selo { color: var(--cor-primaria); }
+.classificacao-falhou .selo { color: var(--cor-atencao); }
+.motivo { color: var(--cor-neutra); }
+.motivo-bloqueio { color: var(--cor-neutra); align-self: center; }
 @media print {
   .botoes, .etapas, .zona, button, .introducao { display: none !important; }
   .app { max-width: none; padding: 0; }

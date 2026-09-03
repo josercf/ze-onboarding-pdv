@@ -24,7 +24,7 @@ export default function App() {
       </header>
       {!config.n8nBaseUrl && estado.etapa >= 3 && <p role="alert" className="aviso">Serviço de análise não configurado (VITE_N8N_BASE_URL).</p>}
       {estado.etapa === 1 && <EtapaDados estado={estado} despachar={despachar} />}
-      {estado.etapa === 2 && <EtapaAnexos estado={estado} despachar={despachar} />}
+      {estado.etapa === 2 && <EtapaAnexos estado={estado} despachar={despachar} cliente={cliente} />}
       {estado.etapa === 3 && <EtapaAnalise estado={estado} despachar={despachar} cliente={cliente} />}
       {estado.etapa === 4 && <EtapaRelatorio estado={estado} despachar={despachar} cliente={cliente} />}
     </main>

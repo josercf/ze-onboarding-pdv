@@ -1,8 +1,10 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
 import { describe, expect, test, vi } from 'vitest';
+import { ErroApi, type ClienteN8n } from '../api/clienteN8n';
 import { estadoInicial, reduzir } from '../fluxo/estadoApp';
+import type { Formulario, RespostaClassificacao } from '../tipos';
 import { EtapaAnexos } from './EtapaAnexos';
 
 const MB = 1048576;
@@ -11,104 +13,137 @@ const arquivo = (nome: string, mime: string, tamanho = MB) => {
   Object.defineProperty(f, 'size', { value: tamanho });
   return f;
 };
+type Classificar = ClienteN8n['classificarArquivo'];
+const classificacaoDe = (tipo: RespostaClassificacao['tipo_detectado'], confianca = 0.9): RespostaClassificacao =>
+  ({ arquivo_id: 'x', nome: 'x', mime: 'image/jpeg', tipo_detectado: tipo, confianca, motivo: `parece ${tipo}`, modelo: 'm', tokens: { entrada: 1, saida: 1 }, latencia_ms: 1 });
+const porNome = (mapa: Record<string, RespostaClassificacao | Error>) => vi.fn(async (p: { nome: string }) => {
+  const r = mapa[p.nome];
+  if (r instanceof Error) throw r;
+  return r;
+}) as unknown as Classificar;
 
-function Harness() {
-  const [estado, despachar] = useReducer(reduzir, undefined, () => ({ ...estadoInicial(), etapa: 2 as const }));
-  return (<><EtapaAnexos estado={estado} despachar={despachar} obterDuracao={async () => 18} /><output data-testid="etapa">{estado.etapa}</output></>);
+function Harness({ classificar, formulario }: { classificar: Classificar; formulario?: Partial<Formulario> }) {
+  const [estado, despachar] = useReducer(reduzir, undefined, () => {
+    const e = estadoInicial();
+    return { ...e, etapa: 2 as const, formulario: { ...e.formulario, ...formulario } };
+  });
+  return (<><EtapaAnexos estado={estado} despachar={despachar} cliente={{ classificarArquivo: classificar }} obterDuracao={async () => 18} /><div data-testid="etapa">{estado.etapa}</div></>);
 }
 
 const entrada = () => screen.getByLabelText('Adicionar arquivos') as HTMLInputElement;
 const linha = (nome: string) => screen.getByRole('listitem', { name: nome });
+const continuar = () => screen.getByRole('button', { name: 'Continuar' });
+const TODOS = { 'fachada.jpeg': classificacaoDe('fachada'), 'geladeira.jpeg': classificacaoDe('refrigerador'), 'balcao.jpeg': classificacaoDe('equipamentos'), 'nf.jpeg': classificacaoDe('nf_ambev'), 'cartao.pdf': classificacaoDe('cartao_cnpj') };
+const subirTodos = async () => userEvent.upload(entrada(), [arquivo('fachada.jpeg', 'image/jpeg'), arquivo('geladeira.jpeg', 'image/jpeg'), arquivo('balcao.jpeg', 'image/jpeg'), arquivo('nf.jpeg', 'image/jpeg'), arquivo('cartao.pdf', 'application/pdf'), arquivo('tour.mp4', 'video/mp4', 4 * MB)]);
 
 describe('EtapaAnexos', () => {
-  test.skip('sugere o tipo pelo nome, mostra duração do vídeo e habilita continuar', async () => {
-    render(<Harness />);
-    await userEvent.upload(entrada(), [arquivo('fachada 2.jpeg', 'image/jpeg'), arquivo('VIDEO 1.mp4', 'video/mp4', 4 * MB)]);
-    expect(within(linha('fachada 2.jpeg')).getByRole('combobox')).toHaveValue('fachada');
-    expect(within(linha('VIDEO 1.mp4')).getByRole('combobox')).toHaveValue('video_geral');
-    expect(await within(linha('VIDEO 1.mp4')).findByText('18 s')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Continuar' })).toBeEnabled();
+  test('classifica em lote, preenche o tipo com confiança alta, pede escolha com confiança baixa e não classifica vídeo', async () => {
+    const classificar = porNome({ 'fachada.jpeg': classificacaoDe('fachada', 0.92), 'gelo.jpeg': classificacaoDe('refrigerador', 0.4) });
+    render(<Harness classificar={classificar} />);
+    await userEvent.upload(entrada(), [arquivo('fachada.jpeg', 'image/jpeg'), arquivo('gelo.jpeg', 'image/jpeg'), arquivo('tour.mp4', 'video/mp4', 4 * MB)]);
+    expect(await within(linha('fachada.jpeg')).findByText('Fachada, detectado')).toBeInTheDocument();
+    expect(within(linha('fachada.jpeg')).getByRole('combobox')).toHaveValue('fachada');
+    expect(await within(linha('gelo.jpeg')).findByText('Escolha o tipo')).toBeInTheDocument();
+    expect(within(linha('gelo.jpeg')).getByRole('combobox')).toHaveValue('');
+    expect(within(linha('gelo.jpeg')).getByText('parece refrigerador')).toBeInTheDocument();
+    expect(within(linha('tour.mp4')).getByRole('combobox')).toHaveValue('video_geral');
+    expect(await within(linha('tour.mp4')).findByText('18 s')).toBeInTheDocument();
+    expect(classificar).toHaveBeenCalledTimes(2);
   });
 
-  test.skip('sem tipo sugerido, exige escolha antes de continuar', async () => {
-    render(<Harness />);
-    await userEvent.upload(entrada(), arquivo('gelo.jpeg', 'image/jpeg'));
-    const combo = within(linha('gelo.jpeg')).getByRole('combobox');
+  test('enquanto classifica, o seletor fica desabilitado e Continuar explica o motivo', async () => {
+    let resolver!: (r: RespostaClassificacao) => void;
+    const classificar = vi.fn(() => new Promise<RespostaClassificacao>((res) => { resolver = res; })) as unknown as Classificar;
+    render(<Harness classificar={classificar} />);
+    await userEvent.upload(entrada(), arquivo('fachada.jpeg', 'image/jpeg'));
+    const combo = within(linha('fachada.jpeg')).getByRole('combobox');
+    expect(combo).toBeDisabled();
+    expect(within(linha('fachada.jpeg')).getByText('Classificando...')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Aguarde a classificação terminar');
+    resolver(classificacaoDe('fachada'));
+    await waitFor(() => expect(combo).toBeEnabled());
+    expect(combo).toHaveValue('fachada');
+  });
+
+  test('falha na classificação deixa o arquivo sem tipo, com aviso, e o usuário escolhe à mão', async () => {
+    render(<Harness classificar={porNome({ 'foto.jpeg': new Error('O serviço respondeu HTTP 500') })} />);
+    await userEvent.upload(entrada(), arquivo('foto.jpeg', 'image/jpeg'));
+    expect(await within(linha('foto.jpeg')).findByText('Não foi possível classificar automaticamente.')).toBeInTheDocument();
+    const combo = within(linha('foto.jpeg')).getByRole('combobox');
     expect(combo).toHaveValue('');
-    expect(screen.getByRole('button', { name: 'Continuar' })).toBeDisabled();
     await userEvent.selectOptions(combo, 'refrigerador');
-    expect(screen.getByRole('button', { name: 'Continuar' })).toBeEnabled();
+    expect(combo).toHaveValue('refrigerador');
+    expect(within(linha('foto.jpeg')).getByText('Refrigerador')).toBeInTheDocument();
+  });
+
+  test('falha de autenticação mostra o aviso de token e não chama o webhook para os próximos arquivos', async () => {
+    const classificar = porNome({ 'a.jpeg': new ErroApi('auth', 'token inválido', 401) });
+    render(<Harness classificar={classificar} />);
+    await userEvent.upload(entrada(), arquivo('a.jpeg', 'image/jpeg'));
+    expect(await screen.findByRole('alert')).toHaveTextContent('VITE_N8N_TOKEN');
+    await userEvent.upload(entrada(), arquivo('b.jpeg', 'image/jpeg'));
+    expect(await within(linha('b.jpeg')).findByText('Não foi possível classificar automaticamente.')).toBeInTheDocument();
+    expect(classificar).toHaveBeenCalledTimes(1);
   });
 
   test('recusa arquivo grande com o motivo e não cria linha', async () => {
-    render(<Harness />);
+    render(<Harness classificar={porNome({})} />);
     await userEvent.upload(entrada(), arquivo('VIDEO grande.mp4', 'video/mp4', 12 * MB));
     expect(screen.getByRole('alert')).toHaveTextContent('WhatsApp');
     expect(screen.queryByRole('listitem', { name: 'VIDEO grande.mp4' })).toBeNull();
   });
 
-  test.skip('tipo incompatível com o formato mostra erro na linha e mantém sem tipo', async () => {
-    render(<Harness />);
+  test('tipo incompatível com o formato mostra erro na linha e mantém sem tipo', async () => {
+    render(<Harness classificar={porNome({})} />);
     await userEvent.upload(entrada(), arquivo('clipe.mp4', 'video/mp4'));
     const combo = within(linha('clipe.mp4')).getByRole('combobox');
+    expect(combo).toHaveValue('video_geral');
     await userEvent.selectOptions(combo, 'refrigerador');
     expect(within(linha('clipe.mp4')).getByText(/Formato não aceito/)).toBeInTheDocument();
     expect(combo).toHaveValue('');
-    expect(screen.getByRole('button', { name: 'Continuar' })).toBeDisabled();
     await userEvent.selectOptions(combo, 'video_geral');
-    expect(screen.getByRole('button', { name: 'Continuar' })).toBeEnabled();
+    expect(combo).toHaveValue('video_geral');
   });
 
   test('miniatura cria a object URL uma vez por arquivo e revoga ao desmontar', async () => {
     const criar = vi.spyOn(URL, 'createObjectURL').mockClear();
     const revogar = vi.spyOn(URL, 'revokeObjectURL').mockClear();
-    const { unmount } = render(<Harness />);
+    const { unmount } = render(<Harness classificar={porNome({ 'gelo.jpeg': classificacaoDe('refrigerador') })} />);
     await userEvent.upload(entrada(), arquivo('gelo.jpeg', 'image/jpeg'));
+    await within(linha('gelo.jpeg')).findByText('Refrigerador, detectado');
     expect(criar).toHaveBeenCalledTimes(1);
-
-    const combo = within(linha('gelo.jpeg')).getByRole('combobox');
-    await userEvent.selectOptions(combo, 'refrigerador');
+    await userEvent.selectOptions(within(linha('gelo.jpeg')).getByRole('combobox'), 'fachada');
     expect(criar).toHaveBeenCalledTimes(1);
-
     unmount();
     expect(revogar).toHaveBeenCalledTimes(1);
+    criar.mockRestore();
+    revogar.mockRestore();
   });
 
-  test('checklist reflete os tipos obrigatórios e remover funciona', async () => {
-    render(<Harness />);
+  test('Continuar só habilita com todos os obrigatórios presentes, mostra o que falta e avança para a etapa 3', async () => {
+    render(<Harness classificar={porNome(TODOS)} />);
     await userEvent.upload(entrada(), arquivo('fachada.jpeg', 'image/jpeg'));
-    const checklist = screen.getByRole('list', { name: 'Checklist de anexos' });
-    expect(within(checklist).getByText('Fachada: ok')).toBeInTheDocument();
-    expect(within(checklist).getByText('NF Ambev: faltando')).toBeInTheDocument();
-    expect(within(checklist).queryByText(/Câmara fria/)).toBeNull();
-    await userEvent.click(within(linha('fachada.jpeg')).getByRole('button', { name: 'Remover' }));
-    expect(screen.queryByRole('listitem', { name: 'fachada.jpeg' })).toBeNull();
-  });
-
-  test.skip('continuar avança para a etapa 3 e voltar retorna à 1', async () => {
-    render(<Harness />);
-    await userEvent.upload(entrada(), arquivo('fachada.jpeg', 'image/jpeg'));
-    await userEvent.click(screen.getByRole('button', { name: 'Continuar' }));
+    await within(linha('fachada.jpeg')).findByText('Fachada, detectado');
+    expect(continuar()).toBeDisabled();
+    expect(screen.getByRole('status')).toHaveTextContent('Falta: Refrigerador, Balcão e equipamentos, NF Ambev, Cartão CNPJ, Vídeo geral');
+    await subirTodos();
+    await waitFor(() => expect(continuar()).toBeEnabled());
+    expect(screen.queryByRole('status')).toBeNull();
+    await userEvent.click(continuar());
     expect(screen.getByTestId('etapa')).toHaveTextContent('3');
   });
 
-  test('com computador declarado, checklist exige Balcão e equipamentos', async () => {
-    function HarnessComComputador() {
-      const [estado, despachar] = useReducer(reduzir, undefined, () => ({ ...estadoInicial(), etapa: 2 as const, formulario: { ...estadoInicial().formulario, computadorInternet: 'sim' as const } }));
-      return (<><EtapaAnexos estado={estado} despachar={despachar} obterDuracao={async () => 18} /></>);
-    }
-    render(<HarnessComComputador />);
-    const checklist = screen.getByRole('list', { name: 'Checklist de anexos' });
-    expect(within(checklist).getByText('Balcão e equipamentos: faltando')).toBeInTheDocument();
+  test('câmara fria declarada "sim" entra na lista do que falta', async () => {
+    render(<Harness classificar={porNome(TODOS)} formulario={{ camaraFria: 'sim' }} />);
+    await subirTodos();
+    await within(linha('cartao.pdf')).findByText('Cartão CNPJ, detectado');
+    expect(continuar()).toBeDisabled();
+    expect(screen.getByRole('status')).toHaveTextContent('Falta: Câmara fria');
   });
 
-  test('sem computador nem impressora declarados, Balcão e equipamentos não aparece no checklist', async () => {
-    function HarnessComputadorEImpressoraNao() {
-      const [estado, despachar] = useReducer(reduzir, undefined, () => ({ ...estadoInicial(), etapa: 2 as const, formulario: { ...estadoInicial().formulario, computadorInternet: 'nao' as const, impressoraTermica: 'nao' as const } }));
-      return (<><EtapaAnexos estado={estado} despachar={despachar} obterDuracao={async () => 18} /></>);
-    }
-    render(<HarnessComputadorEImpressoraNao />);
-    const checklist = screen.getByRole('list', { name: 'Checklist de anexos' });
-    expect(within(checklist).queryByText(/Balcão e equipamentos/)).toBeNull();
+  test('voltar retorna à etapa 1', async () => {
+    render(<Harness classificar={porNome({})} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Voltar' }));
+    expect(screen.getByTestId('etapa')).toHaveTextContent('1');
   });
 });
