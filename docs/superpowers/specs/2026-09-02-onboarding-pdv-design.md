@@ -169,8 +169,8 @@ Página única com quatro etapas, pt-BR, responsiva, identidade visual neutra co
 | Etapa | Conteúdo | Regras de avanço |
 |---|---|---|
 | 1. Dados do PDV | CNPJ com máscara e dígito verificador, consulta automática à BrasilAPI, card "Dados da Receita" somente leitura, campos declarativos, painel "Parâmetros de avaliação" | Obrigatórios preenchidos, inteiros ≥ 0, CNPJ válido |
-| 2. Anexos | Arrastar e soltar, lista com miniatura, tamanho e seletor de tipo pré-sugerido pelo nome do arquivo, checklist de completude | Formato e tamanho válidos; pode avançar com tipos faltando |
-| 3. Análise | Barra geral e uma linha por arquivo (na fila, analisando, concluído, falhou com repetir), concorrência 2 | Todos concluídos, ou o usuário aceita seguir com falhas como Não verificável |
+| 2. Anexos | Arrastar e soltar, lista com miniatura, tamanho e seletor de tipo pré-sugerido pelo nome do arquivo (restrito aos tipos cujos formatos aceitam o mime do arquivo), checklist de completude | Formato e tamanho válidos; pode avançar com tipos faltando; escolher um tipo incompatível com o arquivo limpa o tipo do anexo (fica sem tipo) e bloqueia o avanço até uma escolha válida |
+| 3. Análise | Barra geral e uma linha por arquivo (na fila, analisando, concluído, falhou com repetir), concorrência 2; o botão Repetir de um arquivo falho fica desabilitado enquanto houver algum anexo na fila ou em análise | Todos concluídos, ou o usuário aceita seguir com falhas como Não verificável |
 | 4. Relatório | Cabeçalho com razão social, CNPJ, data e hora e recomendação; tabela das 16 verificações; evidências por arquivo com miniatura, alertas e timestamps que posicionam o vídeo local; parecer; rodapé com modelos e custo estimado | Imprimir/Salvar PDF, Baixar JSON, Nova análise |
 
 ## 10. Tratamento de erros
@@ -183,6 +183,7 @@ Página única com quatro etapas, pt-BR, responsiva, identidade visual neutra co
 | 502 ou 504 | Uma nova tentativa automática após 3 s, depois botão repetir; pode seguir com o arquivo como Não verificável |
 | `aderente_ao_tipo = false` | Alerta no arquivo e opção de retipar e reanalisar |
 | `consolidar` falha | Relatório exibido sem parecer, com botão para gerar novamente |
+| Exceção lançada durante uma verificação do motor de regras | O motor isola a exceção só naquele item, que vira Não verificável com observado `Erro interno na verificação: <mensagem>`; as demais verificações seguem normalmente |
 | Rede caiu | Fila pausa e retoma ao reconectar |
 | Resposta do n8n passa de 95 s | O frontend aborta a chamada (AbortController) e trata como 504 |
 
@@ -227,17 +228,18 @@ Repositório público `josercf/ze-onboarding-pdv`, remote `git@github.com-joserc
 
 ## 14. Fora de escopo nesta versão
 
-Persistência de envios, fila de revisão e histórico; entrega do relatório por e-mail, Slack ou WhatsApp; identidade do PDV além do CNPJ; extração de frames no navegador como fallback para vídeos acima de 11 MB; processamento assíncrono com polling; verificação de consistência de ambiente entre anexos (mesmo piso, mesmas paredes); proteção anti-bot (Turnstile); verificação de CPF de sócio.
+Persistência de envios, fila de revisão e histórico (avaliada com Supabase, adiada para uma fase 2); entrega do relatório por e-mail, Slack ou WhatsApp; identidade do PDV além do CNPJ; extração de frames no navegador como fallback para vídeos acima de 11 MB; processamento assíncrono com polling; verificação de consistência de ambiente entre anexos (mesmo piso, mesmas paredes); proteção anti-bot (Turnstile); verificação de CPF de sócio.
 
 ## 15. Riscos e verificações pendentes
 
 | Risco | Mitigação |
 |---|---|
-| Gemini via OpenRouter não aceitar `video_url` em base64 (a documentação afirma que aceita, mas não foi testado com chave) | Tarefa zero do plano: teste real com um vídeo de exemplo antes de qualquer código de produto. Se falhar, ativa-se o fallback de frames (ADR-002) |
+| Gemini via OpenRouter não aceitar `video_url` em base64 (a documentação afirma que aceita, mas não foi testado com chave) | Tarefa zero do plano: teste real com um vídeo de exemplo antes de qualquer código de produto. Se falhar, ativa-se o fallback de frames (ADR-002). Adiada nesta versão por falta de `OPENROUTER_API_KEY` no ambiente de implementação; pendente antes de considerar a versão validada |
 | Latência acima de 100 s em vídeos longos | Limite de 11 MB (cerca de 60 s de vídeo de WhatsApp); timeout de 80 s no HTTP Request; concorrência 2 |
 | Contagem de refrigeradores imprecisa | Regra com tolerância de 1 unidade; evidências com timestamps para conferência humana; calibração com os dois casos reais |
-| Modelo indisponível ou descontinuado | Modelos em variáveis do workflow, trocáveis sem editar nós |
+| Modelo indisponível ou descontinuado | Modelos no nó `Config` de cada workflow, trocáveis sem editar nós |
 | Token público do webhook | CORS restrito, limites de tamanho, rotação; ADR-004 |
+| Templates dos workflows n8n (`n8n/templates/*.template.json`) montados à mão, sem acesso à interface do n8n Cloud para exportar | Conferir cada nó importado contra as tabelas da seção 8 (Passo 1 e 2 do guia de operação); detalhes internos do n8n (`typeVersion`, parâmetros de `Extract from File`, `If`, `Set` e `HTTP Request`) são estimativa até a validação na importação real |
 
 ## 16. Custo estimado
 
