@@ -56,6 +56,13 @@ describe('analisarArquivo', () => {
     const fetchFn = vi.fn((_url: string, init: RequestInit) => new Promise((_, rej) => init.signal!.addEventListener('abort', () => rej(Object.assign(new Error('abortado'), { name: 'AbortError' })))));
     await expect(cliente(fetchFn, { timeoutMs: 5 }).analisarArquivo(params())).rejects.toMatchObject({ codigo: 'tempo' });
   });
+  test('2xx com corpo inválido rejeita com ErroApi código servidor', async () => {
+    const fetchFn = vi.fn(async () => new Response('não é json', { status: 200 }));
+    const erro = await cliente(fetchFn).analisarArquivo(params()).catch((e) => e);
+    expect(erro).toBeInstanceOf(ErroApi);
+    expect(erro).toMatchObject({ codigo: 'servidor', mensagem: 'Resposta inválida do serviço' });
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+  });
   test('cancelamento durante a espera do retry não dispara a segunda chamada', async () => {
     const controlador = new AbortController();
     const fetchFn = vi.fn(async () => json(502, { erro: { codigo: 'modelo', mensagem: 'Erro temporário' } }));

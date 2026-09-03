@@ -1,4 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
+import { ErroApi } from '../api/clienteN8n';
 import type { Observacao } from '../tipos';
 import { executarFila, type ItemFila } from './filaAnalise';
 
@@ -39,6 +40,21 @@ describe('executarFila', () => {
     expect(itens.map((i) => i.estado)).toEqual(['concluido', 'falhou', 'concluido']);
     expect(itens[1].erro).toBe('Falha simulada');
     expect(aoMudar.mock.calls.filter(([i]) => i.arquivoId === 'b').map(([i]) => i.estado)).toEqual(['analisando', 'falhou']);
+  });
+
+  test('guarda o código do ErroApi quando a falha vem da API e limpa ao reiniciar a análise', async () => {
+    const analisar = vi.fn(async (i: ItemFila) => { if (i.arquivoId === 'a') throw new ErroApi('auth', 'Token do n8n ausente ou inválido', 401); return obs(i.arquivoId); });
+    const itens = [item('a'), item('b')];
+    await executarFila(itens, analisar);
+    expect(itens[0].erroCodigo).toBe('auth');
+    expect(itens[1].erroCodigo).toBeUndefined();
+  });
+
+  test('falha que não é ErroApi não define erroCodigo', async () => {
+    const analisar = vi.fn(async (i: ItemFila) => { throw new Error('Falha genérica'); });
+    const itens = [item('a')];
+    await executarFila(itens, analisar);
+    expect(itens[0].erroCodigo).toBeUndefined();
   });
 
   test('reexecução só processa itens na fila ou com falha', async () => {

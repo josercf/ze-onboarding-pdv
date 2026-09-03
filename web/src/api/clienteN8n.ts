@@ -69,7 +69,11 @@ export function criarClienteN8n(cfg: ConfigCliente): ClienteN8n {
         try { mensagem = (await resposta.json())?.erro?.mensagem ?? mensagem; } catch { /* corpo sem JSON */ }
         throw new ErroApi(mapearStatus(resposta.status), mensagem, resposta.status);
       }
-      return (await resposta.json()) as T;
+      try {
+        return (await resposta.json()) as T;
+      } catch {
+        throw new ErroApi('servidor', 'Resposta inválida do serviço');
+      }
     } finally {
       clearTimeout(timer);
       sinal?.removeEventListener('abort', cancelar);

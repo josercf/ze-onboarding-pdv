@@ -18,7 +18,7 @@ export function EtapaAnalise({ estado, despachar, cliente, hoje = () => new Date
   function analisar(anexos: Anexo[]) {
     const itens: ItemFila[] = anexos.filter((a) => a.tipo).map((a) => ({ arquivoId: a.arquivoId, arquivo: a.arquivo, nome: a.nome, tipo: a.tipo as TipoAnexo, estado: a.estado === 'concluido' ? 'concluido' : 'na_fila', observacao: a.observacao }));
     void executarFila(itens, (item) => cliente.analisarArquivo({ arquivo: item.arquivo, nome: item.nome, tipo: item.tipo, arquivoId: item.arquivoId, contexto }), {
-      aoMudar: (item) => despachar({ tipo: 'anexo_estado', valor: { arquivoId: item.arquivoId, estado: item.estado, observacao: item.observacao, erro: item.erro } }),
+      aoMudar: (item) => despachar({ tipo: 'anexo_estado', valor: { arquivoId: item.arquivoId, estado: item.estado, observacao: item.observacao, erro: item.erro, erroCodigo: item.erroCodigo } }),
     });
   }
 
@@ -41,12 +41,16 @@ export function EtapaAnalise({ estado, despachar, cliente, hoje = () => new Date
   const terminados = estado.anexos.filter((a) => a.estado === 'concluido' || a.estado === 'falhou').length;
   const falhos = estado.anexos.filter((a) => a.estado === 'falhou').length;
   const emAndamento = estado.anexos.some((a) => a.estado === 'na_fila' || a.estado === 'analisando');
+  const semTokenValido = estado.anexos.some((a) => a.estado === 'falhou' && a.erroCodigo === 'auth');
 
   return (
     <section aria-labelledby="t-analise">
       <h2 id="t-analise">3. Análise dos arquivos</h2>
       <p>Cada arquivo é analisado individualmente. Isso leva de 10 a 40 segundos por arquivo.</p>
       <progress aria-label="Progresso da análise" max={estado.anexos.length} value={terminados} role="progressbar" aria-valuemin={0} aria-valuemax={estado.anexos.length} aria-valuenow={terminados} />
+      {semTokenValido && (
+        <p role="alert" className="aviso">Token do n8n ausente ou inválido. Verifique a configuração (VITE_N8N_TOKEN) antes de repetir.</p>
+      )}
       <ul className="fila" aria-label="Arquivos em análise">
         {estado.anexos.map((a) => (
           <li key={a.arquivoId} aria-label={a.nome} className={`estado-${a.estado}`}>
@@ -55,7 +59,7 @@ export function EtapaAnalise({ estado, despachar, cliente, hoje = () => new Date
             {a.estado === 'falhou'
               ? <span className="erro">Falhou: {a.erro}</span>
               : <span>{ROTULO_ESTADO_ITEM[a.estado]}</span>}
-            {a.estado === 'falhou' && <button type="button" disabled={emAndamento} onClick={() => analisar([a])}>Repetir</button>}
+            {a.estado === 'falhou' && <button type="button" disabled={emAndamento || semTokenValido} onClick={() => analisar([a])}>Repetir</button>}
           </li>
         ))}
       </ul>

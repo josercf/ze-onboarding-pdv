@@ -1,10 +1,11 @@
 import { regiaoDefault } from '@shared/config/index';
+import type { CodigoErroApi } from '../api/clienteN8n';
 import { validarCnpj } from '../cnpj/validarCnpj';
 import type { AnexoEnviado, Formulario, Observacao, Parecer, ParametrosRegiao, Receita, Recomendacao, TipoAnexo, Verificacao } from '../tipos';
 import type { EstadoItem } from './filaAnalise';
 
 export type Etapa = 1 | 2 | 3 | 4;
-export interface Anexo { arquivoId: string; arquivo: File; nome: string; mime: string; tipo: TipoAnexo | null; duracaoS: number | null; estado: EstadoItem; observacao?: Observacao; erro?: string }
+export interface Anexo { arquivoId: string; arquivo: File; nome: string; mime: string; tipo: TipoAnexo | null; duracaoS: number | null; estado: EstadoItem; observacao?: Observacao; erro?: string; erroCodigo?: CodigoErroApi }
 export interface EstadoApp {
   etapa: Etapa; formulario: Formulario; receita: Receita | null; receitaErro: string | null; parametros: ParametrosRegiao;
   anexos: Anexo[]; verificacoes: Verificacao[]; recomendacao: Recomendacao | null; parecer: Parecer | null; parecerErro: string | null;
@@ -16,7 +17,7 @@ export type Acao =
   | { tipo: 'anexo_adicionar'; valor: Anexo }
   | { tipo: 'anexo_remover'; arquivoId: string }
   | { tipo: 'anexo_tipo'; arquivoId: string; valor: TipoAnexo | null }
-  | { tipo: 'anexo_estado'; valor: { arquivoId: string; estado: EstadoItem; observacao?: Observacao; erro?: string } }
+  | { tipo: 'anexo_estado'; valor: { arquivoId: string; estado: EstadoItem; observacao?: Observacao; erro?: string; erroCodigo?: CodigoErroApi } }
   | { tipo: 'resultado'; verificacoes: Verificacao[]; recomendacao: Recomendacao }
   | { tipo: 'parecer'; valor: Parecer | null; erro?: string | null }
   | { tipo: 'etapa'; valor: Etapa }
@@ -79,7 +80,7 @@ export function reduzir(e: EstadoApp, acao: Acao): EstadoApp {
     case 'anexo_adicionar': return e.anexos.some((a) => a.arquivoId === acao.valor.arquivoId) ? e : { ...e, anexos: [...e.anexos, acao.valor] };
     case 'anexo_remover': return { ...e, anexos: e.anexos.filter((a) => a.arquivoId !== acao.arquivoId) };
     case 'anexo_tipo': return { ...e, anexos: e.anexos.map((a) => (a.arquivoId === acao.arquivoId ? { ...a, tipo: acao.valor, estado: 'na_fila', observacao: undefined, erro: undefined } : a)) };
-    case 'anexo_estado': return { ...e, anexos: e.anexos.map((a) => (a.arquivoId === acao.valor.arquivoId ? { ...a, estado: acao.valor.estado, observacao: acao.valor.observacao, erro: acao.valor.erro } : a)) };
+    case 'anexo_estado': return { ...e, anexos: e.anexos.map((a) => (a.arquivoId === acao.valor.arquivoId ? { ...a, estado: acao.valor.estado, observacao: acao.valor.observacao, erro: acao.valor.erro, erroCodigo: acao.valor.erroCodigo } : a)) };
     case 'resultado': return { ...e, verificacoes: acao.verificacoes, recomendacao: acao.recomendacao };
     case 'parecer': return { ...e, parecer: acao.valor, parecerErro: acao.erro ?? null };
     case 'etapa': return { ...e, etapa: acao.valor };

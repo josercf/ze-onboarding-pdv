@@ -3,7 +3,7 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
 import { describe, expect, test, vi } from 'vitest';
-import type { ClienteN8n } from '../api/clienteN8n';
+import { ErroApi, type ClienteN8n } from '../api/clienteN8n';
 import { estadoInicial, reduzir, type Anexo, type EstadoApp } from '../fluxo/estadoApp';
 import type { Observacao } from '../tipos';
 import { EtapaAnalise } from './EtapaAnalise';
@@ -57,6 +57,21 @@ describe('EtapaAnalise', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Continuar' }));
     expect(screen.getByTestId('etapa')).toHaveTextContent('4');
     expect(screen.getByTestId('verificacoes')).toHaveTextContent('16');
+  });
+
+  test('anexo falho com código auth mostra aviso de configuração e desabilita Repetir', async () => {
+    const analisarArquivo = vi.fn(async (p: { arquivoId: string; tipo: string }) => {
+      if (p.arquivoId === 'a1') throw new ErroApi('auth', 'O serviço respondeu HTTP 403', 403);
+      return obs(p.arquivoId, p.tipo);
+    });
+    const cliente = { analisarArquivo, consolidar: vi.fn() } as unknown as ClienteN8n;
+    render(<Harness cliente={cliente} />);
+
+    const linhaA1 = await screen.findByRole('listitem', { name: 'a1.jpeg' });
+    await within(linhaA1).findByText(/Falhou:/);
+    const aviso = await screen.findByRole('alert');
+    expect(aviso).toHaveTextContent('Token do n8n ausente ou inválido. Verifique a configuração (VITE_N8N_TOKEN) antes de repetir.');
+    expect(within(linhaA1).getByRole('button', { name: 'Repetir' })).toBeDisabled();
   });
 
   test('Repetir fica desabilitado enquanto qualquer item da fila ainda está em andamento', async () => {
