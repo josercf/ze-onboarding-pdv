@@ -1,6 +1,6 @@
 # Passe de design da interface e do relatório
 
-Data: 2026-09-03. Status: aprovada em conversa, aguardando revisão do texto. Decisores: José Romualdo (produto), com apoio do Claude Code.
+Data: 2026-09-03. Status: aceita; implementada conforme `docs/superpowers/plans/2026-09-03-passe-de-design.md`; decisão registrada na ADR-008. Decisores: José Romualdo (produto), com apoio do Claude Code.
 
 ## 1. Contexto
 

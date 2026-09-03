@@ -26,7 +26,7 @@ A publicação em `https://josercf.github.io/ze-onboarding-pdv/` depende do merg
 
 | Pasta | Conteúdo |
 |---|---|
-| `web/` | Frontend estático (Vite + React + TypeScript), publicado no GitHub Pages |
+| `web/` | Frontend estático (Vite + React + TypeScript) com sistema visual em CSS puro por camadas em `web/src/estilos/`, publicado no GitHub Pages |
 | `n8n/` | Workflows exportados, prompts e módulos JS dos nós Code |
 | `shared/` | Schemas JSON das observações, do parecer e da classificação dos anexos; configuração (CNAEs, itens críticos, padrões regionais, tipos de anexo obrigatórios por formulário) |
 | `docs/` | Design, ADRs, guia de operação (`operacao.md`) e roteiro de testes manuais (`testes-manuais.md`) |
