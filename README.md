@@ -6,7 +6,7 @@ Estado atual: versão inicial implementada (frontend, motor de regras e workflow
 
 A publicação em `https://josercf.github.io/ze-onboarding-pdv/` depende do merge para `main` e destas pendências:
 
-- Configurar os segredos `N8N_BASE_URL` e `N8N_TOKEN` no GitHub Actions.
+- Configurar no GitHub Actions a variável de repositório `N8N_BASE_URL` (Settings, Variables) e o segredo `N8N_TOKEN` (Settings, Secrets); o `deploy.yml` lê a URL de `vars` e o token de `secrets`.
 - Habilitar o GitHub Pages no repositório.
 - Criar a credencial do OpenRouter e importar os workflows no n8n Cloud, conforme `docs/operacao.md`.
 - Rodar `pnpm smoke` contra o ambiente publicado.
