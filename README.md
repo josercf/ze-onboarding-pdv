@@ -2,7 +2,15 @@
 
 Validação de onboarding de novos pontos de venda (PDV) com análise de fotos, vídeos e documentos por IA e geração de relatório de conformidade.
 
-Estado atual: versão inicial implementada (frontend, motor de regras e workflows n8n prontos; workflow de deploy no GitHub Pages configurado em `.github/workflows/deploy.yml`). A publicação em `https://josercf.github.io/ze-onboarding-pdv/` depende do merge para `main` e da configuração dos segredos do GitHub Actions e dos workflows no n8n Cloud; ver a seção "Pendências para o usuário" do relatório da Tarefa 18 em `.superpowers/sdd/2026-09-02-onboarding-pdv/task-18-report.md`. O documento de design está em `docs/superpowers/specs/2026-09-02-onboarding-pdv-design.md` e as decisões arquiteturais em `docs/adrs/`.
+Estado atual: versão inicial implementada (frontend, motor de regras e workflows n8n prontos; workflow de deploy no GitHub Pages configurado em `.github/workflows/deploy.yml`). O documento de design está em `docs/superpowers/specs/2026-09-02-onboarding-pdv-design.md` e as decisões arquiteturais em `docs/adrs/`.
+
+A publicação em `https://josercf.github.io/ze-onboarding-pdv/` depende do merge para `main` e destas pendências:
+
+- Configurar os segredos `N8N_BASE_URL` e `N8N_TOKEN` no GitHub Actions.
+- Habilitar o GitHub Pages no repositório.
+- Criar a credencial do OpenRouter e importar os workflows no n8n Cloud, conforme `docs/operacao.md`.
+- Rodar `pnpm smoke` contra o ambiente publicado.
+- Executar o roteiro manual em `docs/testes-manuais.md`.
 
 ## Comandos
 

@@ -181,10 +181,10 @@ Página única com quatro etapas, pt-BR, responsiva, identidade visual neutra co
 | Arquivo fora de formato ou tamanho | Recusado no ato, com motivo e dica de compactação |
 | 401 do n8n | Mensagem de configuração e bloqueio do envio |
 | 502 ou 504 | Uma nova tentativa automática após 3 s, depois botão repetir; pode seguir com o arquivo como Não verificável |
-| `aderente_ao_tipo = false` | Alerta no arquivo e opção de retipar e reanalisar |
+| `aderente_ao_tipo = false` | Alerta no arquivo; o item 16 fica em Atenção e retipar o anexo exige nova análise nesta versão |
 | `consolidar` falha | Relatório exibido sem parecer, com botão para gerar novamente |
 | Exceção lançada durante uma verificação do motor de regras | O motor isola a exceção só naquele item, que vira Não verificável com observado `Erro interno na verificação: <mensagem>`; as demais verificações seguem normalmente |
-| Rede caiu | Fila pausa e retoma ao reconectar |
+| Rede caiu | O item em voo falha com mensagem de erro; o usuário repete manualmente quando a conexão voltar |
 | Resposta do n8n passa de 95 s | O frontend aborta a chamada (AbortController) e trata como 504 |
 
 Repetir um arquivo substitui a observação anterior pelo mesmo `arquivo_id`.
@@ -240,6 +240,11 @@ Persistência de envios, fila de revisão e histórico (avaliada com Supabase, a
 | Modelo indisponível ou descontinuado | Modelos no nó `Config` de cada workflow, trocáveis sem editar nós |
 | Token público do webhook | CORS restrito, limites de tamanho, rotação; ADR-004 |
 | Templates dos workflows n8n (`n8n/templates/*.template.json`) montados à mão, sem acesso à interface do n8n Cloud para exportar | Conferir cada nó importado contra as tabelas da seção 8 (Passo 1 e 2 do guia de operação); detalhes internos do n8n (`typeVersion`, parâmetros de `Extract from File`, `If`, `Set` e `HTTP Request`) são estimativa até a validação na importação real |
+
+### Limitações conhecidas
+
+- Fila de análise sem pausa automática: a seção 10 chegou a prever que a fila pausasse e retomasse sozinha ao reconectar. Nesta versão, uma queda de rede falha o item em voo com mensagem de erro, e o usuário repete manualmente quando a conexão voltar.
+- Retipagem sem atalho automático: a seção 10 chegou a prever reanálise automática quando `aderente_ao_tipo = false`. Nesta versão o item 16 fica em Atenção e retipar o anexo exige refazer a análise dele.
 
 ## 16. Custo estimado
 
