@@ -2,7 +2,7 @@
 
 Validação de onboarding de novos pontos de venda (PDV) com análise de fotos, vídeos e documentos por IA e geração de relatório de conformidade, com classificação automática dos anexos pelo modelo antes da análise.
 
-Estado atual: versão inicial implementada (frontend, motor de regras e workflows n8n prontos; workflow de deploy no GitHub Pages configurado em `.github/workflows/deploy.yml`). O documento de design está em `docs/superpowers/specs/2026-09-02-onboarding-pdv-design.md` e as decisões arquiteturais em `docs/adrs/`.
+Estado atual: versão inicial implementada (frontend, motor de regras e workflows n8n prontos; workflow de deploy no GitHub Pages configurado em `.github/workflows/deploy.yml`). A classificação automática dos anexos com checklist de documentos também está implementada e testada, mas ainda não foi validada contra a instância do n8n com os workflows reimportados. Os documentos de design estão em `docs/superpowers/specs/2026-09-02-onboarding-pdv-design.md` e `docs/superpowers/specs/2026-09-03-classificacao-automatica-design.md`; as decisões arquiteturais, em `docs/adrs/`.
 
 A publicação em `https://josercf.github.io/ze-onboarding-pdv/` depende do merge para `main` e destas pendências:
 
@@ -28,7 +28,7 @@ A publicação em `https://josercf.github.io/ze-onboarding-pdv/` depende do merg
 |---|---|
 | `web/` | Frontend estático (Vite + React + TypeScript), publicado no GitHub Pages |
 | `n8n/` | Workflows exportados, prompts e módulos JS dos nós Code |
-| `shared/` | Schemas JSON das observações e do parecer, configuração (CNAEs, itens críticos, padrões regionais) |
+| `shared/` | Schemas JSON das observações, do parecer e da classificação dos anexos; configuração (CNAEs, itens críticos, padrões regionais, tipos de anexo obrigatórios por formulário) |
 | `docs/` | Design, ADRs, guia de operação (`operacao.md`) e roteiro de testes manuais (`testes-manuais.md`) |
 | `exemplos/` | Materiais reais para teste local. Ignorado pelo git por conter dados pessoais |
 

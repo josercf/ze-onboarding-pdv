@@ -23,7 +23,7 @@ Esta spec cobre o primeiro dos três subprojetos da segunda iteração. Os outro
 
 ### 3.1 Layout
 
-No desktop a tela tem duas colunas: à esquerda a área de upload e a lista de arquivos; à direita o painel "Documentos do PDV" com o checklist. No celular o painel vira um resumo fixo acima da lista ("4 de 6 documentos obrigatórios enviados") que expande ao toque.
+No desktop a tela tem duas colunas: à esquerda a área de upload e a lista de arquivos; à direita o painel "Documentos do PDV" com o checklist. No celular (abaixo de 720px) o painel aparece acima da lista, recolhido por padrão, mostrando o resumo "Documentos do PDV: 4 de 6 obrigatórios enviados"; tocar nele expande o checklist completo.
 
 ### 3.2 Upload e lista
 
@@ -78,7 +78,7 @@ Resposta `200`:
 
 Terceiro workflow gerado pelo mesmo build (`pnpm build:n8n`), com os nós: `Webhook`, `Extract from File`, `validar-entrada` em modo classificação (sem `tipo`, mesmos limites de formato e tamanho), `Config`, `entrada ok`, `montar-requisicao-classificacao`, `openrouter` (`google/gemini-2.5-flash`), `validar-classificacao`, `responder 200`, `responder 400`, `responder 500`. PDF vai com o parser de arquivo, como na análise.
 
-Arquivos novos: `n8n/prompts/classificar.md` (prompt curto pedindo só a classificação entre os sete tipos, com a descrição de cada um e a opção `indefinido`), `shared/schemas/classificacao.json` (schema estrito com `tipo_detectado`, `confianca` e `motivo`), `n8n/lib/montar-requisicao-classificacao.js`, `n8n/lib/validar-classificacao.js`, `n8n/templates/classificar-arquivo.template.json` e o JSON gerado em `n8n/workflows/`. O guia de operação ganha o terceiro workflow e o lembrete de reassociar credenciais na importação. O smoke faz a chamada de classificação com a imagem sintética antes da análise.
+Arquivos novos: `n8n/prompts/classificar.md` (prompt curto pedindo só a classificação entre os sete tipos, com a descrição de cada um e a opção `indefinido`), `shared/schemas/classificacao.json` (schema estrito com `tipo_detectado`, `confianca` e `motivo`), `n8n/templates/classificar-arquivo.template.json` e o JSON gerado em `n8n/workflows/`. A montagem da requisição e a validação da saída da classificação viraram as funções `montarRequisicaoClassificacao` e `validarClassificacao`, acrescentadas aos módulos existentes `n8n/lib/montar-requisicao.js` e `n8n/lib/validar-saida.js` em vez de arquivos novos, porque o build (`scripts/build-n8n.ts`) embute o conteúdo de uma lib inteira em cada nó Code: basta apontar o nó novo para o arquivo já existente e chamar a função certa no wrapper. O guia de operação ganha o terceiro workflow e o lembrete de reassociar credenciais na importação. O smoke faz a chamada de classificação com a imagem sintética antes da análise.
 
 Custo estimado por imagem: cerca de 1.200 tokens de entrada e 40 de saída no flash, fração de centavo; latência de 1 a 3 s.
 
@@ -92,7 +92,7 @@ A etapa 3 não muda. O relatório passa a exibir, por arquivo, o tipo detectado 
 
 ## 7. Erros e limites
 
-Erros de classificação nunca bloqueiam: falha do webhook, timeout ou resposta fora do schema deixam o arquivo em "Escolha o tipo" com a mensagem "Não foi possível classificar automaticamente", e o usuário escolhe à mão. Falha de autenticação mostra o aviso de configuração já usado na etapa 3 e pausa a fila de classificação. `indefinido` segue o caminho da baixa confiança. Limites inalterados: 11 MB por vídeo, 8 MB por imagem ou PDF, timeout de 95 s e uma repetição após 3 s em 500, 504 e falha de rede.
+Erros de classificação nunca bloqueiam: falha do webhook, timeout ou resposta fora do schema deixam o arquivo em "Escolha o tipo" com a mensagem "Não foi possível classificar automaticamente", e o usuário escolhe à mão. Falha de autenticação mostra um aviso próprio da etapa 2, citando a variável `VITE_N8N_TOKEN`, e pausa a fila de classificação. `indefinido` segue o caminho da baixa confiança. Limites inalterados: 11 MB por vídeo, 8 MB por imagem ou PDF, timeout de 95 s e uma repetição após 3 s em 500, 504 e falha de rede.
 
 ## 8. Testes
 
