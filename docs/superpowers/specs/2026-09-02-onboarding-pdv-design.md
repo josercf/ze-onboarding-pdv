@@ -136,7 +136,7 @@ Resposta 200, uma `Observacao`:
 | `cartao_cnpj` | `cnpj`, `razao_social`, `situacao`, `cnae_principal`, `endereco`, `data_emissao` |
 | `video_geral` | `duracao_s`, `refrigeradores[] {categoria, marca, timestamp_s}`, `camara_fria {presente, timestamp_s}`, `ambiente` (loja, deposito, misto), `entregadores {motos, bags, pessoas_entregando}`, `equipamentos {...}`, `transcricao` |
 
-Erros: 400 (tipo, formato ou tamanho inválido), 401 (token), 413 (payload), 502 (OpenRouter falhou ou JSON inválido após uma nova tentativa), 504 (tempo). Corpo `{"erro": {"codigo": "...", "mensagem": "..."}}`.
+Erros: 400 (tipo, formato ou tamanho inválido), 401 (token), 413 (payload), 500 (OpenRouter falhou ou JSON inválido após uma nova tentativa), 504 (tempo). Corpo `{"erro": {"codigo": "...", "mensagem": "..."}}`.
 
 ### 7.2 `POST {N8N_BASE}/webhook/consolidar`
 
@@ -154,9 +154,11 @@ Resposta 200, um `Parecer`: `parecer` (pt-BR, até 150 palavras), `pontos_de_ate
 | 4 | Set `Config`: modelo de análise | If: entrada válida segue; inválida responde 400 |
 | 5 | If: entrada válida segue; inválida responde 400 | HTTP Request OpenRouter, modelo de parecer, `response_format` json_schema, timeout 60 s |
 | 6 | Code `montar-requisicao`: prompt e schema pelo tipo; `messages` com parte `video_url`, `image_url` ou `file` em data URL; `response_format` json_schema strict; `provider.require_parameters: true`; `provider.data_collection: "deny"`; `plugins` com pdf engine `native` | Code `validar-parecer` |
-| 7 | HTTP Request OpenRouter, Bearer em credencial, timeout 80 s, uma nova tentativa | Respond to Webhook 200 ou 502 |
+| 7 | HTTP Request OpenRouter, Bearer em credencial, timeout 80 s, uma nova tentativa | Respond to Webhook 200 ou 500 |
 | 8 | Code `validar-saida`: parse, campos obrigatórios, metadados (tokens, latência, modelo) | |
-| 9 | Respond to Webhook 200; ramo de erro responde 502 | |
+| 9 | Respond to Webhook 200; ramo de erro responde 500 | |
+
+Os ramos de erro respondem 500. No n8n Cloud, o proxy Cloudflare substitui as respostas 502 e 504 vindas da origem pela sua própria página HTML de erro; a resposta 500 escapa dessa substituição e chega ao frontend com o corpo JSON intacto.
 
 Modelos no nó `Config` de cada workflow: análise `google/gemini-2.5-flash` (vídeo, imagem, PDF e structured outputs confirmados na lista de modelos do OpenRouter em 2026-09-02), parecer `google/gemini-2.5-pro`. Ambos trocáveis sem editar nós.
 
@@ -180,7 +182,7 @@ Página única com quatro etapas, pt-BR, responsiva, identidade visual neutra co
 | BrasilAPI indisponível ou CNPJ não encontrado | Preenchimento manual; itens 1 a 4 ficam Não verificável, com aviso |
 | Arquivo fora de formato ou tamanho | Recusado no ato, com motivo e dica de compactação |
 | 401 do n8n | Mensagem de configuração e bloqueio do envio |
-| 502 ou 504 | Uma nova tentativa automática após 3 s, depois botão repetir; pode seguir com o arquivo como Não verificável |
+| 500 ou 504 | Uma nova tentativa automática após 3 s, depois botão repetir; pode seguir com o arquivo como Não verificável |
 | `aderente_ao_tipo = false` | Alerta no arquivo; o item 16 fica em Atenção e retipar o anexo exige nova análise nesta versão |
 | `consolidar` falha | Relatório exibido sem parecer, com botão para gerar novamente |
 | Exceção lançada durante uma verificação do motor de regras | O motor isola a exceção só naquele item, que vira Não verificável com observado `Erro interno na verificação: <mensagem>`; as demais verificações seguem normalmente |

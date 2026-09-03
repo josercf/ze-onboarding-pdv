@@ -20,6 +20,7 @@ Cada nó Code é escrito como módulo JS em `n8n/lib/`, coberto por Vitest, e um
 
 - Importação manual no n8n Cloud pode ficar defasada: `docs/operacao.md` descreve o procedimento e o smoke test verifica o webhook publicado.
 - Divergência entre o ambiente Node dos testes e o runtime dos nós Code: os módulos usam apenas JavaScript padrão, sem dependências.
+- O proxy Cloudflare do n8n Cloud substitui por sua própria página HTML de erro as respostas 502 e 504 vindas da origem, mascarando o corpo JSON dos nós `Respond to Webhook`; por isso os ramos de erro de `analisar-arquivo` e `consolidar` respondem 500, código que escapa dessa substituição (achado confirmado em teste real contra o n8n Cloud em 2026-09-02).
 
 ## Consequências
 

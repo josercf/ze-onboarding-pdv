@@ -180,7 +180,7 @@
     },
     {
       "id": "responder-502-parecer",
-      "name": "responder 502",
+      "name": "responder 500",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
@@ -191,7 +191,7 @@
         "respondWith": "json",
         "responseBody": "={{ JSON.stringify({ erro: { codigo: 'analise_falhou', mensagem: ($json.error && $json.error.message) || $json.message || 'Falha na análise' } }) }}",
         "options": {
-          "responseCode": 502
+          "responseCode": 500
         }
       }
     }
@@ -259,7 +259,7 @@
         ],
         [
           {
-            "node": "responder 502",
+            "node": "responder 500",
             "type": "main",
             "index": 0
           }
@@ -277,7 +277,7 @@
         ],
         [
           {
-            "node": "responder 502",
+            "node": "responder 500",
             "type": "main",
             "index": 0
           }
