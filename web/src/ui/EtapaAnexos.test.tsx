@@ -94,7 +94,7 @@ describe('EtapaAnexos', () => {
 
   test('com computador declarado, checklist exige Balcão e equipamentos', async () => {
     function HarnessComComputador() {
-      const [estado, despachar] = useReducer(reduzir, undefined, () => ({ ...estadoInicial(), etapa: 2 as const, formulario: { ...estadoInicial().formulario, computadorInternet: 'sim' } }));
+      const [estado, despachar] = useReducer(reduzir, undefined, () => ({ ...estadoInicial(), etapa: 2 as const, formulario: { ...estadoInicial().formulario, computadorInternet: 'sim' as const } }));
       return (<><EtapaAnexos estado={estado} despachar={despachar} obterDuracao={async () => 18} /></>);
     }
     render(<HarnessComComputador />);
@@ -104,7 +104,7 @@ describe('EtapaAnexos', () => {
 
   test('sem computador nem impressora declarados, Balcão e equipamentos não aparece no checklist', async () => {
     function HarnessComputadorEImpressoraNao() {
-      const [estado, despachar] = useReducer(reduzir, undefined, () => ({ ...estadoInicial(), etapa: 2 as const, formulario: { ...estadoInicial().formulario, computadorInternet: 'nao', impressoraTermica: 'nao' } }));
+      const [estado, despachar] = useReducer(reduzir, undefined, () => ({ ...estadoInicial(), etapa: 2 as const, formulario: { ...estadoInicial().formulario, computadorInternet: 'nao' as const, impressoraTermica: 'nao' as const } }));
       return (<><EtapaAnexos estado={estado} despachar={despachar} obterDuracao={async () => 18} /></>);
     }
     render(<HarnessComputadorEImpressoraNao />);
