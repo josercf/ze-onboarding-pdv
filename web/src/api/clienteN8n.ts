@@ -1,5 +1,5 @@
 import { limites } from '@shared/config/index';
-import type { Contexto, Formulario, Observacao, Parecer, ParametrosRegiao, Receita, Recomendacao, TipoAnexo, Verificacao } from '../tipos';
+import type { Contexto, Formulario, Observacao, Parecer, ParametrosRegiao, Receita, Recomendacao, RespostaClassificacao, TipoAnexo, Verificacao } from '../tipos';
 
 export type CodigoErroApi = 'auth' | 'entrada' | 'payload' | 'servidor' | 'tempo' | 'rede';
 
@@ -18,12 +18,14 @@ export class ErroApi extends Error {
 }
 
 export interface ParamsAnalisar { arquivo: Blob; nome: string; tipo: TipoAnexo; arquivoId: string; contexto: Contexto }
+export interface ParamsClassificar { arquivo: Blob; nome: string; arquivoId: string }
 export interface PayloadConsolidar {
   formulario: Formulario; receita: Receita | null; parametros_regiao: ParametrosRegiao;
   observacoes: Observacao[]; verificacoes: Verificacao[]; recomendacao_regras: Recomendacao;
 }
 export interface ClienteN8n {
   analisarArquivo(p: ParamsAnalisar, sinal?: AbortSignal): Promise<Observacao>;
+  classificarArquivo(p: ParamsClassificar, sinal?: AbortSignal): Promise<RespostaClassificacao>;
   consolidar(p: PayloadConsolidar, sinal?: AbortSignal): Promise<Parecer>;
 }
 export interface ConfigCliente {
@@ -104,6 +106,15 @@ export function criarClienteN8n(cfg: ConfigCliente): ClienteN8n {
         return fd;
       };
       return comRetry(() => chamar<Observacao>('analisar-arquivo', { method: 'POST', body: corpo() }, sinal), sinal);
+    },
+    classificarArquivo(p, sinal) {
+      const corpo = () => {
+        const fd = new FormData();
+        fd.append('arquivo', p.arquivo, p.nome);
+        fd.append('arquivo_id', p.arquivoId);
+        return fd;
+      };
+      return comRetry(() => chamar<RespostaClassificacao>('classificar-arquivo', { method: 'POST', body: corpo() }, sinal), sinal);
     },
     consolidar(p, sinal) {
       return comRetry(() => chamar<Parecer>('consolidar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }, sinal), sinal);

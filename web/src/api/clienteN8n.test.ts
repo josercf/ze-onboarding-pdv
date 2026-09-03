@@ -4,6 +4,8 @@ import { ErroApi, criarClienteN8n, mapearStatus } from './clienteN8n';
 
 const contexto: Contexto = { cnpj: '11222333000181', razao_social: 'EXEMPLO LTDA', codigo_parceiro_declarado: '0011223', qtd_refrigeradores_declarada: 6, camara_fria_declarada: 'sim' };
 const observacao = { arquivo_id: 'a1', tipo: 'fachada', resumo: 'ok' };
+const classificacao = { arquivo_id: 'c1', nome: 'foto.jpeg', mime: 'image/jpeg', tipo_detectado: 'fachada', confianca: 0.9, motivo: 'Frente de loja', modelo: 'm', tokens: { entrada: 1, saida: 1 }, latencia_ms: 1 };
+const paramsClassificar = () => ({ arquivo: new Blob(['x'], { type: 'image/jpeg' }), nome: 'foto.jpeg', arquivoId: 'c1' });
 const json = (status: number, corpo: unknown) => new Response(JSON.stringify(corpo), { status, headers: { 'Content-Type': 'application/json' } });
 const dormir = vi.fn(async () => {});
 
@@ -71,6 +73,32 @@ describe('analisarArquivo', () => {
     });
     await expect(cliente(fetchFn, { dormir: dormir_mock }).analisarArquivo(params(), controlador.signal)).rejects.toMatchObject({ codigo: 'servidor' });
     expect(fetchFn).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('classificarArquivo', () => {
+  test('envia multipart só com arquivo e arquivo_id, com token, e devolve a classificação', async () => {
+    const fetchFn = vi.fn(async () => json(200, classificacao));
+    const r = await cliente(fetchFn).classificarArquivo(paramsClassificar());
+    expect(r).toEqual(classificacao);
+    const [url, init] = fetchFn.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://n8n.exemplo.com/webhook/classificar-arquivo');
+    expect((init.headers as Record<string, string>)['X-Api-Token']).toBe('tok');
+    const fd = init.body as FormData;
+    expect(fd.get('arquivo_id')).toBe('c1');
+    expect(fd.get('tipo')).toBeNull();
+    expect(fd.get('contexto')).toBeNull();
+    expect((fd.get('arquivo') as File).name).toBe('foto.jpeg');
+  });
+  test('500 é repetido uma vez e 401 vira auth sem repetição', async () => {
+    dormir.mockClear();
+    const fetchFn = vi.fn().mockResolvedValueOnce(json(500, { erro: { codigo: 'classificacao_falhou', mensagem: 'falhou' } })).mockResolvedValueOnce(json(200, classificacao));
+    await expect(cliente(fetchFn).classificarArquivo(paramsClassificar())).resolves.toEqual(classificacao);
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+    expect(dormir).toHaveBeenCalledWith(3000);
+    const negado = vi.fn(async () => json(401, { erro: { codigo: 'auth', mensagem: 'token inválido' } }));
+    await expect(cliente(negado).classificarArquivo(paramsClassificar())).rejects.toMatchObject({ codigo: 'auth', mensagem: 'token inválido' });
+    expect(negado).toHaveBeenCalledTimes(1);
   });
 });
 

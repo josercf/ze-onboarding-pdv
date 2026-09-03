@@ -1,6 +1,6 @@
-import type { TipoAnexo } from '@shared/schemas/index';
+import type { TipoAnexo, TipoDetectado } from '@shared/schemas/index';
 
-export type { TipoAnexo };
+export type { TipoAnexo, TipoDetectado };
 
 export type SimNao = 'sim' | 'nao';
 export type Nivel = 'boa' | 'media' | 'ruim';
@@ -58,3 +58,8 @@ export interface Verificacao { id: number; item: string; declarado: string; obse
 export interface AnexoEnviado { arquivoId: string; tipo: TipoAnexo; nome: string; duracaoS: number | null; falhou: boolean }
 export interface Parecer { parecer: string; pontos_de_atencao: string[]; recomendacao_sugerida: Recomendacao; justificativa: string; modelo: string; tokens: { entrada: number; saida: number } }
 export interface Contexto { cnpj: string; razao_social: string; codigo_parceiro_declarado: string; qtd_refrigeradores_declarada: number; camara_fria_declarada: SimNao }
+
+export interface RespostaClassificacao {
+  arquivo_id: string; nome: string; mime: string; tipo_detectado: TipoDetectado; confianca: number; motivo: string;
+  modelo: string; tokens: { entrada: number; saida: number }; latencia_ms: number;
+}
