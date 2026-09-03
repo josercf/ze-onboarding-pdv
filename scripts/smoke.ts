@@ -4,17 +4,17 @@ import exemploOk from '../shared/fixtures/exemplo-ok.json';
 import { schemaClassificacaoCompleta, schemaObservacaoCompleta, schemaParecerCompleto } from '../shared/schemas/index';
 
 /**
- * Códigos de saída do processo (contrato de `pnpm smoke`). `rodarSmoke` só devolve 0 a 5; o código
+ * Códigos de saída do processo (contrato de `pnpm smoke`). `rodarSmoke` devolve 0 a 5 e 7; o código
  * 6 só é usado pelo `.catch` do ponto de entrada de CLI, no fim deste arquivo, como último recurso
  * para um erro que não seja `ErroSmoke` (rodarSmoke relança esses erros em vez de convertê-los).
- *   0 sucesso: os dois webhooks responderam 2xx com corpo JSON válido no schema esperado.
+ *   0 sucesso: os três webhooks responderam 2xx com corpo JSON válido no schema esperado.
  *   1 N8N_BASE_URL ou N8N_TOKEN ausentes em .env/ambiente (lerConfig).
- *   2 uma das duas chamadas devolveu HTTP não-2xx; a mensagem é o corpo bruto da resposta (chamar).
+ *   2 uma das três chamadas devolveu HTTP não-2xx; a mensagem é o corpo bruto da resposta (chamar).
  *   3 resposta de analisar-arquivo com HTTP 2xx mas corpo não é JSON válido, ou a observação não
  *     passa no schema de shared/schemas (chamar / validarObservacao).
  *   4 mesma situação que o código 3, mas na resposta de consolidar (chamar / validarParecer).
  *   5 falha de rede: fetchFn rejeitou antes de haver qualquer resposta HTTP (DNS, conexão
- *     recusada, timeout de baixo nível), em qualquer uma das duas chamadas (chamar).
+ *     recusada, timeout de baixo nível), em qualquer uma das três chamadas (chamar).
  *   6 erro inesperado, não classificado nos códigos acima (só no ponto de entrada de CLI).
  *   7 resposta de classificar-arquivo com HTTP 2xx mas corpo não é JSON válido, ou a classificação
  *     não passa no schema de shared/schemas (chamar / validarClassificacao).
@@ -94,9 +94,9 @@ function formatarCorpoErro(texto: string): string {
 
 /**
  * Chama um webhook e devolve o corpo já parseado como JSON. `codigoCorpoInvalido` é o código de
- * saída usado quando a resposta é 2xx mas o corpo não é JSON válido (3 para analisar-arquivo, 4
- * para consolidar na chamada de rodarSmoke) - falha de rede (sem resposta) sempre usa
- * CODIGO_FALHA_REDE, e HTTP não-2xx sempre usa CODIGO_HTTP_NAO_OK, independente do chamador.
+ * saída usado quando a resposta é 2xx mas o corpo não é JSON válido (7 para classificar-arquivo,
+ * 3 para analisar-arquivo, 4 para consolidar na chamada de rodarSmoke) - falha de rede (sem resposta)
+ * sempre usa CODIGO_FALHA_REDE, e HTTP não-2xx sempre usa CODIGO_HTTP_NAO_OK, independente do chamador.
  */
 export async function chamar(
   fetchFn: typeof fetch, cfg: ConfigSmoke, caminho: string, init: RequestInit, codigoCorpoInvalido: number, log: Logger = console.log,
