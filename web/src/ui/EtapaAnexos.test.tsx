@@ -128,9 +128,16 @@ describe('EtapaAnexos', () => {
     expect(screen.getByRole('status')).toHaveTextContent('Falta: Refrigerador, Balcão e equipamentos, NF Ambev, Cartão CNPJ, Vídeo geral');
     await subirTodos();
     await waitFor(() => expect(continuar()).toBeEnabled());
-    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.getByRole('status')).toBeEmptyDOMElement();
     await userEvent.click(continuar());
     expect(screen.getByTestId('etapa')).toHaveTextContent('3');
+  });
+
+  test('a região de aviso existe desde o início, mesmo antes de qualquer arquivo', () => {
+    render(<Harness classificar={porNome({})} />);
+    const regiao = screen.getByRole('status');
+    expect(regiao).toBeInTheDocument();
+    expect(regiao).toHaveTextContent('Adicione ao menos um arquivo');
   });
 
   test('câmara fria declarada "sim" entra na lista do que falta', async () => {
