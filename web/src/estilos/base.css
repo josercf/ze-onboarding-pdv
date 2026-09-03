@@ -16,6 +16,9 @@ p { margin: 0 0 var(--espaco-3); }
 
 a { color: var(--cor-primaria); }
 
+fieldset { border: 1px solid var(--cor-borda); border-radius: var(--raio-2); margin: var(--espaco-4) 0; padding: var(--espaco-4); }
+legend { padding: 0 var(--espaco-2); font-weight: 600; }
+
 input, select, textarea, button { font: inherit; }
 
 :focus-visible { outline: 2px solid var(--cor-primaria); outline-offset: 2px; box-shadow: var(--foco); border-radius: var(--raio-1); }

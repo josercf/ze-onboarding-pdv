@@ -9,7 +9,8 @@
 .secao .descricao { color: var(--cor-texto-fraco); font-size: var(--fonte-2); }
 .grade { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--espaco-3) var(--espaco-4); }
 
-.campo { display: flex; flex-direction: column; gap: var(--espaco-1); grid-column: span 6; }
+.campo { display: flex; flex-direction: column; gap: var(--espaco-1); grid-column: span 6; margin: var(--espaco-3) 0; }
+.grade > .campo, .grade > .cartao { margin: 0; }
 .campo-curto { grid-column: span 2; }
 .campo-medio { grid-column: span 3; }
 .campo-longo { grid-column: span 6; }
