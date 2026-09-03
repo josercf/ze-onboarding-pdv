@@ -15,14 +15,15 @@ export function PainelDocumentos({ estado, aberto, aoEscolher }: Props) {
   return (
     <details className="painel-docs" open={aberto}>
       <summary>Documentos do PDV: {enviados} de {obrigatorios.length} obrigatórios enviados</summary>
-      <ul aria-label="Checklist de documentos">
+      <ul aria-label="Checklist de documentos" role="list">
         {ordenados.map((t) => {
           const obrigatorio = obrigatorios.includes(t);
           const n = contagem(t);
           const situacao = n > 0 ? 'ok' : obrigatorio ? 'falta' : 'opcional';
           return (
             <li key={t} className={situacao}>
-              <button type="button" onClick={() => aoEscolher(t)} aria-label={`Adicionar ${TIPOS_CONFIG[t].rotulo}`}>
+              <button type="button" onClick={() => aoEscolher(t)}>
+                <span className="oculto-visual">Adicionar</span>{' '}
                 <span className="rotulo">{TIPOS_CONFIG[t].rotulo}</span>
                 <small>{obrigatorio ? 'obrigatório' : 'opcional'} · {n} arquivo(s)</small>
                 <span className="situacao">{n > 0 ? 'ok' : obrigatorio ? 'falta' : ''}</span>

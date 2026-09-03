@@ -150,7 +150,7 @@ describe('EtapaAnexos', () => {
   test('clicar em um documento do checklist abre o seletor e atribui o tipo ao arquivo enviado, mesmo com classificação diferente', async () => {
     const abrir = vi.spyOn(HTMLInputElement.prototype, 'click').mockImplementation(() => {});
     render(<Harness classificar={porNome({ 'nota.jpeg': classificacaoDe('fachada', 0.95) })} />);
-    await userEvent.click(screen.getByRole('button', { name: 'Adicionar NF Ambev' }));
+    await userEvent.click(screen.getByRole('button', { name: /Adicionar NF Ambev/ }));
     expect(abrir).toHaveBeenCalledTimes(1);
     await userEvent.upload(entrada(), arquivo('nota.jpeg', 'image/jpeg'));
     await waitFor(() => expect(within(linha('nota.jpeg')).getByRole('combobox')).toBeEnabled());

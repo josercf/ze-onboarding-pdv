@@ -16,13 +16,13 @@ describe('PainelDocumentos', () => {
     expect(screen.getByText('Documentos do PDV: 1 de 7 obrigatórios enviados')).toBeInTheDocument();
     const itens = within(screen.getByRole('list', { name: 'Checklist de documentos' })).getAllByRole('listitem');
     expect(itens.map((li) => li.textContent)).toEqual([
-      'Fachadaobrigatório · 2 arquivo(s)ok',
-      'Refrigeradorobrigatório · 0 arquivo(s)falta',
-      'Câmara friaobrigatório · 0 arquivo(s)falta',
-      'Balcão e equipamentosobrigatório · 0 arquivo(s)falta',
-      'NF Ambevobrigatório · 0 arquivo(s)falta',
-      'Cartão CNPJobrigatório · 0 arquivo(s)falta',
-      'Vídeo geralobrigatório · 0 arquivo(s)falta',
+      'Adicionar Fachadaobrigatório · 2 arquivo(s)ok',
+      'Adicionar Refrigeradorobrigatório · 0 arquivo(s)falta',
+      'Adicionar Câmara friaobrigatório · 0 arquivo(s)falta',
+      'Adicionar Balcão e equipamentosobrigatório · 0 arquivo(s)falta',
+      'Adicionar NF Ambevobrigatório · 0 arquivo(s)falta',
+      'Adicionar Cartão CNPJobrigatório · 0 arquivo(s)falta',
+      'Adicionar Vídeo geralobrigatório · 0 arquivo(s)falta',
     ]);
     expect(itens[0]).toHaveClass('ok');
     expect(itens[1]).toHaveClass('falta');
@@ -39,12 +39,19 @@ describe('PainelDocumentos', () => {
   test('clicar em um item chama aoEscolher com o tipo', async () => {
     const aoEscolher = vi.fn();
     render(<PainelDocumentos estado={estadoCom([])} aberto aoEscolher={aoEscolher} />);
-    await userEvent.click(screen.getByRole('button', { name: 'Adicionar NF Ambev' }));
+    await userEvent.click(screen.getByRole('button', { name: /Adicionar NF Ambev/ }));
     expect(aoEscolher).toHaveBeenCalledWith('nf_ambev');
   });
 
   test('aberto=false deixa o painel recolhido', () => {
     render(<PainelDocumentos estado={estadoCom([])} aberto={false} aoEscolher={vi.fn()} />);
     expect(screen.getByText(/Documentos do PDV/).closest('details')).not.toHaveAttribute('open');
+  });
+
+  test('nome acessível do item inclui a situação e a contagem, não só o rótulo', () => {
+    const { rerender } = render(<PainelDocumentos estado={estadoCom([])} aberto aoEscolher={vi.fn()} />);
+    expect(screen.getByRole('button', { name: /Adicionar Fachada.*falta/ })).toBeInTheDocument();
+    rerender(<PainelDocumentos estado={estadoCom([anexo('a1', 'fachada')])} aberto aoEscolher={vi.fn()} />);
+    expect(screen.getByRole('button', { name: /Adicionar Fachada.*ok/ })).toBeInTheDocument();
   });
 });
