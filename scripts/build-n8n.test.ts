@@ -5,7 +5,7 @@ import { describe, expect, test } from 'vitest';
 import { construirTodos, gerarCodigoNo, gerarWorkflow } from './build-n8n';
 
 describe('gerarCodigoNo', () => {
-  test.each(['validar-entrada', 'montar-requisicao', 'validar-saida', 'montar-prompt-parecer', 'validar-parecer'])('%s embute recursos, remove export e é JavaScript válido', (nome) => {
+  test.each(['validar-entrada', 'montar-requisicao', 'validar-saida', 'montar-prompt-parecer', 'validar-parecer', 'validar-entrada-classificacao', 'montar-requisicao-classificacao', 'validar-classificacao'])('%s embute recursos, remove export e é JavaScript válido', (nome) => {
     const codigo = gerarCodigoNo(nome);
     expect(codigo).toContain('const RECURSOS = {');
     expect(codigo).not.toMatch(/^export\s/m);
@@ -44,11 +44,20 @@ describe('workflows versionados', () => {
   test('construirTodos devolve os nomes gerados e escreve na pasta de saída informada, sem tocar n8n/workflows', () => {
     const dirSaida = mkdtempSync(join(tmpdir(), 'build-n8n-'));
     const nomes = construirTodos('n8n/templates', dirSaida);
-    expect(nomes.sort()).toEqual(['analisar-arquivo', 'consolidar']);
+    expect(nomes.sort()).toEqual(['analisar-arquivo', 'classificar-arquivo', 'consolidar']);
     for (const nome of nomes) {
       const caminho = join(dirSaida, `${nome}.json`);
       expect(existsSync(caminho)).toBe(true);
       expect(readFileSync(caminho, 'utf8')).toBe(readFileSync(join('n8n/workflows', `${nome}.json`), 'utf8'));
     }
+  });
+  test('classificar-arquivo gerado chama as três funções de classificação e responde 500 no ramo de erro', () => {
+    const wf = JSON.parse(readFileSync('n8n/workflows/classificar-arquivo.json', 'utf8')) as { nodes: Array<{ name: string; parameters: Record<string, unknown> }> };
+    const codigo = (nome: string) => String(wf.nodes.find((n) => n.name === nome)!.parameters.jsCode);
+    expect(codigo('validar-entrada-classificacao')).toContain('validarEntradaClassificacao(');
+    expect(codigo('montar-requisicao-classificacao')).toContain('montarRequisicaoClassificacao(');
+    expect(codigo('validar-classificacao')).toContain('validarClassificacao(');
+    expect(wf.nodes.find((n) => n.name === 'responder 500')!.parameters.options).toEqual({ responseCode: 500 });
+    expect(wf.nodes.find((n) => n.name === 'Webhook')!.parameters.path).toBe('classificar-arquivo');
   });
 });

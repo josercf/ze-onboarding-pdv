@@ -32,6 +32,23 @@ return [{ json: montarPromptParecer($input.first().json.body, RECURSOS) }];`,
     lib: 'validar-saida',
     wrapper: `return [{ json: validarParecer($input.first().json, RECURSOS) }];`,
   },
+  'validar-entrada-classificacao': {
+    lib: 'validar-entrada',
+    wrapper: `const item = $input.first();
+const binario = item.binary ? (item.binary.arquivo || Object.values(item.binary)[0]) : undefined;
+return [{ json: validarEntradaClassificacao({ body: item.json.body, base64: item.json.arquivo_base64, binario }, RECURSOS) }];`,
+  },
+  'montar-requisicao-classificacao': {
+    lib: 'montar-requisicao',
+    wrapper: `const cfg = $('Config').first().json;
+if (cfg.modelo_classificacao) RECURSOS.modelos.classificacao = cfg.modelo_classificacao;
+return [{ json: montarRequisicaoClassificacao($input.first().json.entrada, RECURSOS) }];`,
+  },
+  'validar-classificacao': {
+    lib: 'validar-saida',
+    wrapper: `const entrada = $('validar-entrada-classificacao').first().json.entrada;
+return [{ json: validarClassificacao($input.first().json, entrada, RECURSOS) }];`,
+  },
 };
 
 export function gerarCodigoNo(nome: string, recursos: Recursos = carregarRecursos()): string {
