@@ -74,4 +74,13 @@ describe('completude e qualidade (16)', () => {
     semProblema.anexosEnviados = semProblema.anexosEnviados.map((a) => (a.arquivoId === 'a9' ? { ...a, duracaoS: null } : a));
     expect(verificarAnexos(semProblema).status).toBe('conforme');
   });
+  test('documento enviado cuja análise falhou não é contado como ausente', () => {
+    const e = ok();
+    e.anexosEnviados = e.anexosEnviados.map((a) => (a.tipo === 'nf_ambev' ? { ...a, falhou: true } : a));
+    e.observacoes = e.observacoes.filter((o) => o.tipo !== 'nf_ambev');
+    const v = verificarAnexos(e);
+    expect(v.status).toBe('atencao');
+    expect(v.observado).toMatch(/1 arquivo\(s\) não analisado/);
+    expect(v.observado).not.toMatch(/faltam/);
+  });
 });

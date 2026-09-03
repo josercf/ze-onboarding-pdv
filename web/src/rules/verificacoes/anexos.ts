@@ -4,7 +4,7 @@ import { montar, observacoesDe, type EntradaMotor } from '../base';
 
 export function verificarAnexos(e: EntradaMotor): Verificacao {
   const obrigatorios = tiposObrigatorios(e.formulario);
-  const presentes = new Set(e.observacoes.map((o) => o.tipo));
+  const presentes = new Set(e.anexosEnviados.map((a) => a.tipo));
   const problemas: string[] = [];
 
   const faltando = obrigatorios.filter((t) => !presentes.has(t));
