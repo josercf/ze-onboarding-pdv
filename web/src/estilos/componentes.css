@@ -13,7 +13,10 @@
 .grade > .campo, .grade > .cartao { margin: 0; }
 .campo-curto { grid-column: span 2; }
 .campo-medio { grid-column: span 3; }
+.campo-largo { grid-column: span 4; }
 .campo-longo { grid-column: span 6; }
+.campo-checkbox { flex-direction: row; align-items: center; gap: var(--espaco-2); }
+.campo-checkbox input { width: auto; }
 .campo label { font-size: var(--fonte-2); font-weight: 600; }
 .campo input, .campo select, .campo textarea { padding: var(--espaco-2); border: 1px solid var(--cor-borda); border-radius: var(--raio-1); background: var(--cor-superficie); }
 .campo small { color: var(--cor-texto-fraco); font-size: var(--fonte-1); }

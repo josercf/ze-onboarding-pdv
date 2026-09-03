@@ -1,5 +1,5 @@
 // web/src/ui/EtapaDados.test.tsx
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useReducer } from 'react';
 import { describe, expect, test, vi } from 'vitest';
@@ -68,5 +68,18 @@ describe('EtapaDados', () => {
     await userEvent.clear(min); await userEvent.type(min, '2');
     expect(min).toHaveValue(2);
     expect(screen.getByLabelText('Câmara fria obrigatória na região')).not.toBeChecked();
+  });
+
+  test('os cinco blocos agrupam os campos da etapa 1', () => {
+    render(<Harness consultar={vi.fn(async () => receita)} />);
+    const blocos = ['Identificação', 'Endereço do ponto de venda', 'Estrutura e equipamentos', 'Operação e entrega', 'Fiscal e comercial'];
+    for (const nome of blocos) expect(screen.getByRole('group', { name: nome })).toBeInTheDocument();
+
+    const em = (nome: string) => within(screen.getByRole('group', { name: nome }));
+    expect(em('Identificação').getByLabelText('CNPJ')).toBeInTheDocument();
+    expect(em('Endereço do ponto de venda').getByLabelText('Logradouro')).toBeInTheDocument();
+    expect(em('Estrutura e equipamentos').getByLabelText('Quantidade de refrigeradores')).toBeInTheDocument();
+    expect(em('Operação e entrega').getByLabelText('Dias e horário de funcionamento do delivery')).toBeInTheDocument();
+    expect(em('Fiscal e comercial').getByLabelText('Emite cupom fiscal?')).toBeInTheDocument();
   });
 });
