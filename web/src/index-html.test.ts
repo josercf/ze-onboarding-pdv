@@ -1,8 +1,6 @@
 // web/src/index-html.test.ts
-import { readFileSync } from 'node:fs';
+import html from '../index.html?raw';
 import { describe, expect, test } from 'vitest';
-
-const html = readFileSync('index.html', 'utf8');
 
 describe('web/index.html', () => {
   test('declara o idioma pt-BR', () => {

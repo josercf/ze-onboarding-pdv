@@ -51,7 +51,7 @@ describe('executarFila', () => {
   });
 
   test('falha que não é ErroApi não define erroCodigo', async () => {
-    const analisar = vi.fn(async (i: ItemFila) => { throw new Error('Falha genérica'); });
+    const analisar = vi.fn(async () => { throw new Error('Falha genérica'); });
     const itens = [item('a')];
     await executarFila(itens, analisar);
     expect(itens[0].erroCodigo).toBeUndefined();
