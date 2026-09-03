@@ -1,6 +1,7 @@
 import Ajv from 'ajv';
 import { describe, expect, test, vi } from 'vitest';
 import {
+  CODIGO_FALHA_REDE, CODIGO_OBSERVACAO_INVALIDA, CODIGO_PARECER_INVALIDO,
   ErroSmoke, PNG, chamar, lerConfig, montarFormDataAnalise, montarPayloadConsolidar, rodarSmoke, validarObservacao, validarParecer,
 } from './smoke';
 
@@ -73,7 +74,7 @@ describe('chamar', () => {
     const fetchFn = vi.fn(async () => jsonResponse(200, { ok: true }));
     const corpo = await chamar(
       fetchFn as unknown as typeof fetch, { base: 'https://n8n.exemplo.com', token: 'tok' }, 'analisar-arquivo',
-      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }, log,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }, CODIGO_OBSERVACAO_INVALIDA, log,
     );
     expect(corpo).toEqual({ ok: true });
     const [url, init] = fetchFn.mock.calls[0] as unknown as [string, RequestInit];
@@ -86,9 +87,36 @@ describe('chamar', () => {
   test('resposta não ok loga a linha HTTP e lança ErroSmoke código 2 com o corpo da resposta', async () => {
     const log = vi.fn();
     const fetchFn = vi.fn(async () => jsonResponse(401, { erro: { codigo: 'auth', mensagem: 'sem token' } }));
-    const promessa = chamar(fetchFn as unknown as typeof fetch, { base: 'https://n8n.exemplo.com', token: 'tok' }, 'consolidar', { method: 'POST' }, log);
+    const promessa = chamar(fetchFn as unknown as typeof fetch, { base: 'https://n8n.exemplo.com', token: 'tok' }, 'consolidar', { method: 'POST' }, CODIGO_PARECER_INVALIDO, log);
     await expect(promessa).rejects.toThrow(ErroSmoke);
     expect(log).toHaveBeenCalledWith(expect.stringMatching(/^consolidar: HTTP 401 em \d+ ms$/));
+  });
+
+  test('fetchFn rejeitando (falha de rede) não loga nada e lança ErroSmoke com o código de falha de rede e a URL na mensagem', async () => {
+    const log = vi.fn();
+    const fetchFn = vi.fn(async () => { throw new Error('ECONNREFUSED'); });
+    try {
+      await chamar(fetchFn as unknown as typeof fetch, { base: 'https://n8n.exemplo.com', token: 'tok' }, 'analisar-arquivo', { method: 'POST' }, CODIGO_OBSERVACAO_INVALIDA, log);
+      throw new Error('deveria ter lançado');
+    } catch (e) {
+      expect((e as ErroSmoke).codigo).toBe(CODIGO_FALHA_REDE);
+      expect((e as ErroSmoke).message).toContain('https://n8n.exemplo.com/webhook/analisar-arquivo');
+      expect((e as ErroSmoke).message).toContain('ECONNREFUSED');
+    }
+    expect(log).not.toHaveBeenCalled();
+  });
+
+  test('corpo 2xx que não é JSON válido loga a linha HTTP e lança ErroSmoke com o código informado em codigoCorpoInvalido', async () => {
+    const log = vi.fn();
+    const fetchFn = vi.fn(async () => new Response('<html>erro</html>', { status: 200 }));
+    try {
+      await chamar(fetchFn as unknown as typeof fetch, { base: 'https://n8n.exemplo.com', token: 'tok' }, 'consolidar', { method: 'POST' }, CODIGO_PARECER_INVALIDO, log);
+      throw new Error('deveria ter lançado');
+    } catch (e) {
+      expect((e as ErroSmoke).codigo).toBe(CODIGO_PARECER_INVALIDO);
+      expect((e as ErroSmoke).message).toContain('não é JSON válido');
+    }
+    expect(log).toHaveBeenCalledWith(expect.stringMatching(/^consolidar: HTTP 200 em \d+ ms$/));
   });
 });
 
@@ -166,6 +194,29 @@ describe('rodarSmoke', () => {
     const fetchFn = vi.fn().mockResolvedValueOnce(jsonResponse(200, OBSERVACAO_VALIDA)).mockResolvedValueOnce(jsonResponse(200, { ...PARECER_VALIDO, recomendacao_sugerida: 'talvez' }));
     const codigo = await rodarSmoke(fetchFn as unknown as typeof fetch, env, vi.fn(), vi.fn());
     expect(codigo).toBe(4);
+    expect(fetchFn).toHaveBeenCalledTimes(2);
+  });
+
+  test('falha de rede na primeira chamada: código de falha de rede, mensagem com a causa, e consolidar não é chamado', async () => {
+    const fetchFn = vi.fn().mockRejectedValueOnce(new Error('ECONNREFUSED'));
+    const logErro = vi.fn();
+    const codigo = await rodarSmoke(fetchFn as unknown as typeof fetch, env, vi.fn(), logErro);
+    expect(codigo).toBe(CODIGO_FALHA_REDE);
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+    expect(logErro).toHaveBeenCalledWith(expect.stringContaining('ECONNREFUSED'));
+  });
+
+  test('corpo 2xx inválido (não é JSON) na chamada de analisar-arquivo: código 3 e consolidar não é chamado', async () => {
+    const fetchFn = vi.fn().mockResolvedValueOnce(new Response('<html>erro</html>', { status: 200 }));
+    const codigo = await rodarSmoke(fetchFn as unknown as typeof fetch, env, vi.fn(), vi.fn());
+    expect(codigo).toBe(CODIGO_OBSERVACAO_INVALIDA);
+    expect(fetchFn).toHaveBeenCalledTimes(1);
+  });
+
+  test('corpo 2xx inválido (não é JSON) na chamada de consolidar: código 4', async () => {
+    const fetchFn = vi.fn().mockResolvedValueOnce(jsonResponse(200, OBSERVACAO_VALIDA)).mockResolvedValueOnce(new Response('<html>erro</html>', { status: 200 }));
+    const codigo = await rodarSmoke(fetchFn as unknown as typeof fetch, env, vi.fn(), vi.fn());
+    expect(codigo).toBe(CODIGO_PARECER_INVALIDO);
     expect(fetchFn).toHaveBeenCalledTimes(2);
   });
 });
