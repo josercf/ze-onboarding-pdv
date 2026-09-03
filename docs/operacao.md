@@ -9,7 +9,7 @@
 ## Publicar ou atualizar os workflows
 1. Alterar `n8n/lib`, `n8n/prompts` ou `shared/` e rodar `pnpm test:node`.
 2. Rodar `pnpm build:n8n` e commitar `n8n/workflows/*.json`.
-3. No n8n Cloud: abrir o workflow, menu ⋯ → Import from File, escolher o JSON gerado (substitui os nós), conferir credenciais dos nós Webhook e HTTP Request, salvar e manter ativo.
+3. No n8n Cloud: abrir o workflow, menu ⋯ → Import from File, escolher o JSON gerado (substitui os nós), reassociar as credenciais nos nós Webhook e HTTP Request (o JSON gerado traz o id placeholder REVISAR-CREDENCIAL, então a importação sempre as desfaz), salvar e publicar.
 4. Rodar `pnpm smoke` (Tarefa 18) contra a instância.
 
 Nunca editar código de nó na interface: o teste de sincronia falha e a mudança se perde na próxima importação. Para trocar de modelo sem reimportar, editar o valor no nó `Config`.
