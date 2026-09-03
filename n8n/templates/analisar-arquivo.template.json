@@ -1,0 +1,351 @@
+{
+  "name": "analisar-arquivo",
+  "nodes": [
+    {
+      "id": "webhook-analisar-arquivo",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -500,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "analisar-arquivo",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://josercf.github.io"
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REVISAR-CREDENCIAL",
+          "name": "Token onboarding PDV"
+        }
+      }
+    },
+    {
+      "id": "extract-from-file",
+      "name": "Extract from File",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -260,
+        0
+      ],
+      "parameters": {
+        "operation": "binaryToPropery",
+        "binaryPropertyName": "arquivo",
+        "destinationKey": "arquivo_base64",
+        "options": {
+          "keepSource": "both"
+        }
+      }
+    },
+    {
+      "id": "validar-entrada",
+      "name": "validar-entrada",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -20,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "__NO__validar-entrada__"
+      }
+    },
+    {
+      "id": "config-analise",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "config-analise-assignment",
+              "name": "modelo_analise",
+              "type": "string",
+              "value": "google/gemini-2.5-flash"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "entrada-ok-analise",
+      "name": "entrada ok",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        460,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "entrada-ok-analise-condition",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "responder-400-analise",
+      "name": "responder 400",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        700,
+        200
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ erro: $json.erro }) }}",
+        "options": {
+          "responseCode": "={{ $json.status }}"
+        }
+      }
+    },
+    {
+      "id": "montar-requisicao",
+      "name": "montar-requisicao",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        -200
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "__NO__montar-requisicao__"
+      }
+    },
+    {
+      "id": "openrouter-analise",
+      "name": "openrouter",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        940,
+        -200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 80000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REVISAR-CREDENCIAL",
+          "name": "OpenRouter"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "validar-saida",
+      "name": "validar-saida",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1180,
+        -260
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "__NO__validar-saida__"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "responder-200-analise",
+      "name": "responder 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1420,
+        -320
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "responder-502-analise",
+      "name": "responder 502",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1420,
+        -80
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ erro: { codigo: 'analise_falhou', mensagem: ($json.error && $json.error.message) || $json.message || 'Falha na análise' } }) }}",
+        "options": {
+          "responseCode": 502
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "validar-entrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "validar-entrada": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "entrada ok",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "entrada ok": {
+      "main": [
+        [
+          {
+            "node": "montar-requisicao",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "responder 400",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "montar-requisicao": {
+      "main": [
+        [
+          {
+            "node": "openrouter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "openrouter": {
+      "main": [
+        [
+          {
+            "node": "validar-saida",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "responder 502",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "validar-saida": {
+      "main": [
+        [
+          {
+            "node": "responder 200",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "responder 502",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "all",
+    "saveManualExecutions": true,
+    "timezone": "America/Sao_Paulo"
+  },
+  "pinData": {}
+}

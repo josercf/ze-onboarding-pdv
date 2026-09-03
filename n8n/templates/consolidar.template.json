@@ -1,0 +1,297 @@
+{
+  "name": "consolidar",
+  "nodes": [
+    {
+      "id": "webhook-consolidar",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -500,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "consolidar",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "https://josercf.github.io"
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REVISAR-CREDENCIAL",
+          "name": "Token onboarding PDV"
+        }
+      }
+    },
+    {
+      "id": "config-parecer",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -260,
+        0
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "config-parecer-assignment",
+              "name": "modelo_parecer",
+              "type": "string",
+              "value": "google/gemini-2.5-pro"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "montar-prompt-parecer",
+      "name": "montar-prompt-parecer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -20,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "__NO__montar-prompt-parecer__"
+      }
+    },
+    {
+      "id": "entrada-ok-parecer",
+      "name": "entrada ok",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "entrada-ok-parecer-condition",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "responder-400-parecer",
+      "name": "responder 400",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        460,
+        200
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ erro: $json.erro }) }}",
+        "options": {
+          "responseCode": "={{ $json.status }}"
+        }
+      }
+    },
+    {
+      "id": "openrouter-parecer",
+      "name": "openrouter",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        -200
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REVISAR-CREDENCIAL",
+          "name": "OpenRouter"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "validar-parecer",
+      "name": "validar-parecer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        -200
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "__NO__validar-parecer__"
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "responder-200-parecer",
+      "name": "responder 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        940,
+        -260
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "responder-502-parecer",
+      "name": "responder 502",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        940,
+        -80
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ erro: { codigo: 'analise_falhou', mensagem: ($json.error && $json.error.message) || $json.message || 'Falha na análise' } }) }}",
+        "options": {
+          "responseCode": 502
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "montar-prompt-parecer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "montar-prompt-parecer": {
+      "main": [
+        [
+          {
+            "node": "entrada ok",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "entrada ok": {
+      "main": [
+        [
+          {
+            "node": "openrouter",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "responder 400",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "openrouter": {
+      "main": [
+        [
+          {
+            "node": "validar-parecer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "responder 502",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "validar-parecer": {
+      "main": [
+        [
+          {
+            "node": "responder 200",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "responder 502",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "all",
+    "saveManualExecutions": true,
+    "timezone": "America/Sao_Paulo"
+  },
+  "pinData": {}
+}
