@@ -91,4 +91,24 @@ describe('EtapaAnexos', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Continuar' }));
     expect(screen.getByTestId('etapa')).toHaveTextContent('3');
   });
+
+  test('com computador declarado, checklist exige Balcão e equipamentos', async () => {
+    function HarnessComComputador() {
+      const [estado, despachar] = useReducer(reduzir, undefined, () => ({ ...estadoInicial(), etapa: 2 as const, formulario: { ...estadoInicial().formulario, computadorInternet: 'sim' } }));
+      return (<><EtapaAnexos estado={estado} despachar={despachar} obterDuracao={async () => 18} /></>);
+    }
+    render(<HarnessComComputador />);
+    const checklist = screen.getByRole('list', { name: 'Checklist de anexos' });
+    expect(within(checklist).getByText('Balcão e equipamentos: faltando')).toBeInTheDocument();
+  });
+
+  test('sem computador nem impressora declarados, Balcão e equipamentos não aparece no checklist', async () => {
+    function HarnessComputadorEImpressoraNao() {
+      const [estado, despachar] = useReducer(reduzir, undefined, () => ({ ...estadoInicial(), etapa: 2 as const, formulario: { ...estadoInicial().formulario, computadorInternet: 'nao', impressoraTermica: 'nao' } }));
+      return (<><EtapaAnexos estado={estado} despachar={despachar} obterDuracao={async () => 18} /></>);
+    }
+    render(<HarnessComputadorEImpressoraNao />);
+    const checklist = screen.getByRole('list', { name: 'Checklist de anexos' });
+    expect(within(checklist).queryByText(/Balcão e equipamentos/)).toBeNull();
+  });
 });

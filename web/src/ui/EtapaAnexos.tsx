@@ -1,6 +1,6 @@
 // web/src/ui/EtapaAnexos.tsx
 import { useEffect, useState } from 'react';
-import { TIPOS_CONFIG } from '@shared/config/index';
+import { TIPOS_CONFIG, tiposObrigatorios } from '@shared/config/index';
 import { TIPOS } from '@shared/schemas/index';
 import { obterDuracaoVideo } from '../anexos/duracaoVideo';
 import { sugerirTipo } from '../anexos/sugerirTipo';
@@ -50,7 +50,7 @@ export function EtapaAnexos({ estado, despachar, obterDuracao = obterDuracaoVide
   }
 
   const presentes = new Set(estado.anexos.map((a) => a.tipo));
-  const obrigatorios = TIPOS.filter((t) => TIPOS_CONFIG[t].obrigatorio);
+  const obrigatorios = tiposObrigatorios(estado.formulario);
 
   return (
     <section aria-labelledby="t-anexos">
