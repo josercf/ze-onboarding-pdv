@@ -1,7 +1,7 @@
 @page { size: A4; margin: 14mm; }
 
 @media print {
-  .botoes, .etapas, .zona, .zona button, .introducao, .painel-docs { display: none !important; }
+  .botoes, .etapas, .zona, button:not(.lista-evidencias button), .introducao, .painel-docs { display: none !important; }
   .app { max-width: none; padding: 0; }
   .evidencias video { display: none; }
   .tabela { overflow: visible; }
