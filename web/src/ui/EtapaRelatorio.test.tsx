@@ -88,6 +88,13 @@ describe('EtapaRelatorio', () => {
     expect(screen.getByTestId('etapa')).toHaveTextContent('1');
   });
 
+  test('o botão Nova análise é secundário e Imprimir ou salvar PDF continua primário', async () => {
+    render(<Harness cliente={clienteCom(vi.fn(async () => parecer))} entrada={ok()} />);
+    expect(await screen.findByText('Material consistente com o declarado.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Nova análise' })).toHaveClass('secundario');
+    expect(screen.getByRole('button', { name: 'Imprimir ou salvar PDF' })).not.toHaveClass('secundario');
+  });
+
   test('mostra o tipo detectado por arquivo e destaca reclassificações', async () => {
     const entrada = ok();
     const estado = estadoDe(entrada);

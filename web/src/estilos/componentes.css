@@ -47,7 +47,7 @@
 .botoes { display: flex; gap: var(--espaco-3); margin: var(--espaco-5) 0 0; flex-wrap: wrap; align-items: center; }
 button { padding: var(--espaco-2) var(--espaco-4); border-radius: var(--raio-1); border: 1px solid var(--cor-primaria); background: var(--cor-primaria); color: #fff; cursor: pointer; }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
-.botoes button[type="button"]:not(:last-of-type) { background: var(--cor-superficie); color: var(--cor-primaria); }
+.secundario { background: var(--cor-superficie); color: var(--cor-primaria); border-color: var(--cor-primaria); }
 
 progress { width: 100%; height: var(--espaco-3); }
 

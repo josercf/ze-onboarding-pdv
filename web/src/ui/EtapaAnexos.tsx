@@ -134,7 +134,7 @@ export function EtapaAnexos({ estado, despachar, cliente, obterDuracao = obterDu
         </ul>
 
         <Botoes>
-          <button type="button" onClick={() => despachar({ tipo: 'etapa', valor: 1 })}>Voltar</button>
+          <button type="button" className="secundario" onClick={() => despachar({ tipo: 'etapa', valor: 1 })}>Voltar</button>
           <button type="button" disabled={!podeAvancar(estado)} onClick={() => despachar({ tipo: 'etapa', valor: 3 })}>Continuar</button>
           <small className="motivo-bloqueio" role="status">{motivoBloqueio}</small>
         </Botoes>

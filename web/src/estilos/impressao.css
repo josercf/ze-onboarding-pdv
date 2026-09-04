@@ -1,9 +1,10 @@
 @page { size: A4; margin: 14mm; }
 
 @media print {
-  .botoes, .etapas, .zona, button, .introducao, .painel-docs { display: none !important; }
+  .botoes, .etapas, .zona, .zona button, .introducao, .painel-docs { display: none !important; }
   .app { max-width: none; padding: 0; }
   .evidencias video { display: none; }
+  .tabela { overflow: visible; }
 
   body { background: #fff; font-size: 10pt; }
   .secao, .cartao, .anexos li, .fila li, .evidencias li { box-shadow: none; }
@@ -12,6 +13,7 @@
   tr, .evidencias li, .contagens li { break-inside: avoid; }
   h2, h3 { break-after: avoid; }
   .evidencias { break-before: page; }
+  .evidencias:empty { break-before: auto; }
 
   .badge { background: transparent !important; border-color: currentColor; }
   .badge.conforme { color: var(--cor-conforme); }

@@ -152,8 +152,8 @@ export function EtapaRelatorio({ estado, despachar, cliente, agora = () => new D
 
       <Botoes>
         <button type="button" onClick={() => window.print()}>Imprimir ou salvar PDF</button>
-        <button type="button" onClick={baixarJson}>Baixar JSON</button>
-        <button type="button" onClick={() => despachar({ tipo: 'reiniciar' })}>Nova análise</button>
+        <button type="button" className="secundario" onClick={baixarJson}>Baixar JSON</button>
+        <button type="button" className="secundario" onClick={() => despachar({ tipo: 'reiniciar' })}>Nova análise</button>
       </Botoes>
     </section>
   );

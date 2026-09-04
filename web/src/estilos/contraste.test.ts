@@ -36,4 +36,8 @@ describe('contraste das cores do sistema', () => {
   test('o cálculo de contraste está correto: preto contra branco dá 21', () => {
     expect(contrasteComBranco('#000000')).toBeCloseTo(21, 1);
   });
+
+  test('cor-borda atinge o mínimo de contorno de componente, 3 para 1 sobre branco (WCAG 1.4.11)', () => {
+    expect(contrasteComBranco(corDe('cor-borda'))).toBeGreaterThanOrEqual(3);
+  });
 });
