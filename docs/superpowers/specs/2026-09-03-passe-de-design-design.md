@@ -54,7 +54,7 @@ Os campos se distribuem em cinco blocos, nesta ordem:
 
 O painel recolhido de parâmetros de avaliação continua ao final, como está.
 
-Na grade, campo de número ou de sim e não ocupa um terço da linha no desktop; campo de texto curto, metade; campo longo (logradouro, horário, observação), a linha inteira. No celular, coluna única.
+Na grade, campo de número ou de sim e não ocupa um terço da linha no desktop; campo de texto curto, metade; campo largo (horário, observação), dois terços; campo longo (logradouro), a linha inteira. No celular, coluna única.
 
 Nada muda em rótulo, identificador de campo, ordem de validação ou mensagem de erro: os testes existentes consultam por rótulo e não devem sofrer churn. A lista de erros passa a ficar junto do botão Continuar, com o estilo de aviso do sistema.
 
@@ -84,7 +84,7 @@ Herdam o sistema sem reescrita de lógica. Na etapa 2, cada arquivo da lista vir
 | Relatório | A linha de contagens mostra os números certos para as fixtures aprovada e reprovada |
 | Etapa 2 | A região de aviso existe no documento mesmo sem mensagem de bloqueio |
 | Motor | Verificação 16 distingue documento ausente de documento enviado cuja análise falhou |
-| Existentes | Todos continuam passando sem ajuste, porque consultam por papel e por texto |
+| Existentes | A maioria passa sem ajuste, por consultar por papel e por texto; dois foram ajustados, ambos legitimamente: duas asserções do relatório foram escopadas à tabela, porque o resumo passou a repetir as palavras no documento, e a asserção que checava a ausência da região de aviso da etapa 2 virou asserção de região vazia, porque a região passa a existir sempre |
 
 Contraste verificado por medição e registrado. Comportamento de impressão verificado no navegador e registrado, porque não é afirmável em teste automatizado.
 

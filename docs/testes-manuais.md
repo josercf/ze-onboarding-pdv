@@ -16,6 +16,11 @@ Pré-requisitos: site publicado, workflows ativos, `pnpm smoke` verde, materiais
 ## Celular
 Repetir o caso aprovado em Chrome Android ou Safari iOS: seleção de arquivos pela galeria, vídeo reproduzindo no relatório, botões de timestamp posicionando o vídeo, impressão em PDF pelo navegador.
 
+## Checagens visuais do relatório
+1. Abrir a pré-visualização de impressão do relatório e conferir que o cabeçalho da tabela se repete a cada página, que nenhuma linha se parte no meio e que os selos de situação aparecem com contorno legível.
+2. Conferir que os campos da etapa 1 têm caixa visível.
+3. Conferir que o foco do teclado é visível ao percorrer os campos com a tecla de tabulação.
+
 ## Registro
 | Data | Caso | Recomendação obtida | Itens divergentes do esperado | Tempo máximo por arquivo | Classificações corretas / total | Observações |
 |---|---|---|---|---|---|---|
